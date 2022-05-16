@@ -14,14 +14,14 @@ rule get_gtdb_metadata:
 	shell:
 		"""
 		mkdir -p {params.outdir}
-		wget -O {output.ar_tax} "{params.gtdb_link}/ar122_taxonomy.tsv" &>> {log}
+		wget -O {output.ar_tax} "{params.gtdb_link}/ar53_taxonomy.tsv" &>> {log}
 		wget -O {output.bac_tax} "{params.gtdb_link}/bac120_taxonomy.tsv" &>> {log}
-		wget -O "{params.outdir}/tmp_ar.tar.gz" "{params.gtdb_link}/ar122_metadata.tar.gz" &>> {log}
+		wget -O "{params.outdir}/tmp_ar.tar.gz" "{params.gtdb_link}/ar53_metadata.tar.gz" &>> {log}
 		wget -O "{params.outdir}/tmp_bac.tar.gz" "{params.gtdb_link}/bac120_metadata.tar.gz" &>> {log}
 		tar -xzf "{params.outdir}/tmp_ar.tar.gz" -C {params.outdir}
 		tar -xzf "{params.outdir}/tmp_bac.tar.gz" -C {params.outdir}
 		rm "{params.outdir}/tmp_ar.tar.gz" "{params.outdir}/tmp_bac.tar.gz"
-		mv {params.outdir}/ar122_metadata* {output.ar_meta}
+		mv {params.outdir}/ar53_metadata* {output.ar_meta}
 		mv {params.outdir}/bac120_metadata* {output.bac_meta}
 		wget -O "{params.outdir}/assembly_summary_refseq.txt" http://ftp.ncbi.nlm.nih.gov/genomes/refseq/assembly_summary_refseq.txt &>> {log}
 		wget -O "{params.outdir}/assembly_summary_genbank.txt" http://ftp.ncbi.nlm.nih.gov/genomes/genbank/assembly_summary_genbank.txt &>> {log}
@@ -51,8 +51,8 @@ rule parse_gtdb_metadata:
 	shell:
 		"""
 		{params.script} -a {input.ar_tax} -b {input.bac_tax} -A {input.ar_meta} -B {input.bac_meta} -r {input.genomes_refseq} -g {input.genomes_genbank} -o {output.gtdb_links} -m {output.gtdb_meta} -c {threads} &>> {log}
-		"""	
-	
+		"""
+
 rule download_gtdb_ncbi:
 	input:
 		gtdb_links = config["rdir"] + "/gtdb/metadata/gtdb_download_info.txt"
@@ -70,9 +70,9 @@ rule download_gtdb_ncbi:
 		cut -f2,4 {input.gtdb_links} | awk -v FS="\\t" -v OFS="\\t" '{{print $1"\\n out="$2}}' > "{params.outdir}/links"
 		aria2c -i "{params.outdir}/links" -c -l "{params.outdir}/links.log" --dir {params.outdir} --max-tries=20 --retry-wait=5 --max-connection-per-server=1 --max-concurrent-downloads={threads} &>> {log}
 		# We need to verify all files are there
-		cut -f4 {input.gtdb_links} | sort > "{params.outdir}/tmp1" 
+		cut -f4 {input.gtdb_links} | sort > "{params.outdir}/tmp1"
 		find {params.outdir} -type f -name '*.gz' | xargs -n 1 basename | sort > "{params.outdir}/tmp2"
-		if diff "{params.outdir}/tmp1" "{params.outdir}/tmp2" 
+		if diff "{params.outdir}/tmp1" "{params.outdir}/tmp2"
 		then
 		  touch "{params.outdir}/done"
 		fi
@@ -212,4 +212,3 @@ if config["custom_gtdb_post_derep"]:
 			done
 			awk -v FS="\\t" -v OFS="\\t" '{{print $2,$1}}' {params.add} | sed '1d' > {output.tax}
 			"""
-
