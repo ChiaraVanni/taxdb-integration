@@ -15,6 +15,10 @@ rule download_genomes_checkv:
 	shell:
 		"""
 		wget -P {params.outdir} {params.checkv_link} &>> {log}
+		DB=$(basename {params.checkv_link})
+		md5sum {params.outdir}/${{DB}}
+		awk 'NR==1; END{print}' <(sed '/^$/d' {log}) > {params.outdir}/checkv_download_notes.txt
+		cat {params.outdir}/checkv_md5.txt >> {params.outdir}/checkv_download_notes.txt
 		mkdir -p "{params.outdir}/checkv_tmp"
 		tar -C "{params.outdir}/checkv_tmp" -xzf {params.outdir}/*.tar.gz
 		mv {params.outdir}/checkv_tmp/checkv-db-*/genome_db/checkv_full.fna {output.fna}
