@@ -9,7 +9,16 @@ threads: 1
 parallel_threads: 128
 
 # select presets for building kraken DB
-# allowed options are 
+# Possible flavours
+# vanilla: includes the GTDB rs202 species cluster representatives (original GTDB, not derepG)
+# vanilla-organelles: includes vanilla + ncbi-organelles
+# vanilla-organelles-virus: includes vanilla + ncbi-organelles + checkv
+# vanilla-organelles-euk-virus: includes vanilla + ncbi-organelles + euk + checkv
+# hires-organelles-virus: includes GTDB rs202 - derepG + ncbi-organelles + CheckV v0.6
+# hires-organelles-mikroeuk-virus: includes GTDB rs202 - derepG + ncbi-organelles + mikroeuk + CheckV v0.6
+# hires-organelles-euk-virus: includes GTDB rs202 - derepG + ncbi-organelles + euk + CheckV v0.6
+
+# allowed options are
 #   "user" (user-supplied table of accessions and species taxids required)
 #   "coarse" (sorting DB)
 #   "highres_pro" (high resolution DB with only prokaryotes and viruses)
@@ -86,7 +95,7 @@ rank_sublineage:
   vertebrate_mammalian: "phylum"
   vertebrate_other: "phylum"
 
-# the rank selected here for custom genomes should be the highest of the previous selection 
+# the rank selected here for custom genomes should be the highest of the previous selection
 rank_custom: "phylum" # "class"
 
 nmax_coarse: 3
@@ -142,4 +151,3 @@ custom_gtdb_post_derep: "/willerslev/users-shared-snm-willerslev-bgl956/taxdb-in
 
 custom_checkv_pre_derep: "n"
 custom_checkv_post_derep: "/willerslev/users-shared-snm-willerslev-bgl956/taxdb-integration/assets/vir_custom_nucl.txt"
-

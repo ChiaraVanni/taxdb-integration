@@ -1,4 +1,76 @@
-if config["kraken2_preset"] == "coarse": # here vanilla...duplicate file and build different flavours
+## double if: first vanilla or hires (loading the right GTDB) then adding the other taxa/dbs
+if config["kraken2_preset"] == "vanilla": # GTDB (original, species clusters)
+
+	rule collect_gtdb_coarse:
+		input:
+			gtdb_reps = config["rdir"] + "/gtdb/metadata/gtdb_reps_tax.txt",
+			gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt"
+		output:
+			kraken2_select = config["rdir"] + "/" + config["db_name"] + "/gtdb_kraken2_select_accessions.txt"
+		params:
+			gendir = config["rdir"] + "/gtdb/reps_genomes",
+			outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
+		shell:
+			"""
+			mkdir -p {params.outdir}
+			find {params.gendir} -type f -name '*.gz' | while read line
+			do
+			  ln -sf "$line" {params.outdir}
+			done
+			cut -f1 {input.gtdb_reps} | grep -F -f - {input.gen2taxid} > {output.kraken2_select}
+			"""
+
+# is this necessary??
+	if config["custom_gtdb_post_derep"] != "n":
+		rule add_custom_gtdb_coarse:
+			input:
+				gtdb_reps = config["rdir"] + "/gtdb/metadata/gtdb_reps_tax.txt",
+				gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt",
+				tax_added = config["rdir"] + "/tax_combined/pro_custom_post_derep_taxonomy.txt"
+			output:
+				custom_select = config["rdir"] + "/" + config["db_name"] + "/custom_gtdb_kraken2_select_taxonomy.txt",
+				kraken2_select = config["rdir"] + "/" + config["db_name"] + "/custom_gtdb_kraken2_select_accessions.txt"
+			params:
+				script = config["wdir"] + "/scripts/coarse_selection_custom.R",
+				rank = "species",
+				nmax = 1,
+				add = config["custom_gtdb_post_derep"],
+				gendir = config["rdir"] + "/derep_combined",
+				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
+			conda:
+				config["wdir"] + "/envs/r.yaml"
+			log:
+				config["rdir"] + "/logs/select_coarse_custom_gtdb.log"
+			shell:
+				"""
+				{params.script} -t {input.gtdb_reps} -c {params.add} -r {params.rank} -n {params.nmax} -o {output.custom_select} &>>{log}
+				mkdir -p {params.outdir}
+				find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.custom_select}) | while read line
+				do
+				  ln -sf "$line" {params.outdir}
+				done
+				cut -f1 {output.custom_select} | grep -F -f - {input.gen2taxid} > {output.kraken2_select}
+				"""
+
+    rule check_vanilla:
+		input:
+			kraken2_select_gtdb = config["rdir"] + "/" + config["db_name"] + "/gtdb_kraken2_select_accessions.txt"
+		output:
+			kraken2_select = config["rdir"] + "/" + config["db_name"] + "/kraken2_select_accessions.txt",
+			checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
+		params:
+			outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
+		shell:
+			"""
+			cat {input.kraken2_select_gtdb} > {output.kraken2_select}
+			if [[ $(cat {output.kraken2_select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]
+                        then
+                          touch {output.checked}
+                        fi
+			"""
+
+if config["kraken2_preset"] == "vanilla-organelles":
+
 	rule select_euk_coarse:
 		input:
 			tax = config["rdir"] + "/tax_combined/{library_name}_derep_taxonomy.txt",
@@ -99,56 +171,6 @@ if config["kraken2_preset"] == "coarse": # here vanilla...duplicate file and bui
 			  touch {output.linked}
 			fi
 			"""
-
-	rule collect_gtdb_coarse:
-		input:
-			gtdb_reps = config["rdir"] + "/gtdb/metadata/gtdb_reps_tax.txt",
-			gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt"
-		output:
-			kraken2_select = config["rdir"] + "/" + config["db_name"] + "/gtdb_kraken2_select_accessions.txt"
-		params:
-			gendir = config["rdir"] + "/gtdb/reps_genomes",
-			outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
-		shell:
-			"""
-			mkdir -p {params.outdir}
-			find {params.gendir} -type f -name '*.gz' | while read line
-			do
-			  ln -sf "$line" {params.outdir}
-			done
-			cut -f1 {input.gtdb_reps} | grep -F -f - {input.gen2taxid} > {output.kraken2_select}
-			"""
-
-	if config["custom_gtdb_post_derep"] != "n":
-		rule add_custom_gtdb_coarse:
-			input:
-				gtdb_reps = config["rdir"] + "/gtdb/metadata/gtdb_reps_tax.txt",
-				gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt",
-				tax_added = config["rdir"] + "/tax_combined/pro_custom_post_derep_taxonomy.txt"
-			output:
-				custom_select = config["rdir"] + "/" + config["db_name"] + "/custom_pro_kraken2_select_taxonomy.txt",
-				kraken2_select = config["rdir"] + "/" + config["db_name"] + "/custom_pro_kraken2_select_accessions.txt"
-			params:
-				script = config["wdir"] + "/scripts/coarse_selection_custom.R",
-				rank = "species",
-				nmax = 1,
-				add = config["custom_gtdb_post_derep"],
-				gendir = config["rdir"] + "/derep_combined",
-				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
-			conda:
-				config["wdir"] + "/envs/r.yaml"
-			log:
-				config["rdir"] + "/logs/select_coarse_custom_gtdb.log"
-			shell:
-				"""
-				{params.script} -t {input.gtdb_reps} -c {params.add} -r {params.rank} -n {params.nmax} -o {output.custom_select} &>>{log}
-				mkdir -p {params.outdir}
-				find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.custom_select}) | while read line
-				do
-				  ln -sf "$line" {params.outdir}
-				done
-				cut -f1 {output.custom_select} | grep -F -f - {input.gen2taxid} > {output.kraken2_select}
-				"""
 
 	rule collect_checkv_coarse:
 		input:
