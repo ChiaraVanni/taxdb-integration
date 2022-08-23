@@ -244,34 +244,82 @@ rule split_mitochondria_prot:
 		touch {output.done}
 		"""
 
-rule collect_refseq_organelles:
+
+localrules: derep_organelle
+
+rule derep_organelle:
 	input:
 		split_mito_nucl = config["rdir"] + "/organelle/genomes/done_mito",
-		split_mito_prot = config["rdir"] + "/organelle/proteins/done_mito",
 		split_plas_nucl = config["rdir"] + "/organelle/genomes/done_plas",
-		split_plas_prot = config["rdir"] + "/organelle/proteins/done_plas",
 		tax_mito_nucl = config["rdir"] + "/organelle/mitochondria_taxonomy_nucl.txt",
-		tax_mito_prot = config["rdir"] + "/organelle/mitochondria_taxonomy_prot.txt",
-		tax_plas_nucl = config["rdir"] + "/organelle/plastid_taxonomy_nucl.txt",
-		tax_plas_prot = config["rdir"] + "/organelle/plastid_taxonomy_prot.txt"
+		tax_plas_nucl = config["rdir"] + "/organelle/plastid_taxonomy_nucl.txt"
 	output:
-		tax = config["rdir"] + "/tax_combined/organelle_taxonomy.txt"
+		derep_meta = config["rdir"] + "/organelle/organelle-derep-genomes_results.tsv"
+	params:
+		indir = config["rdir"] + "/organelle/genomes",
+		outdir = config["rdir"] + "/organelle/derep_genomes",
+		organelle_taxonomy = config["rdir"] + "/organelle/organelle_genome_taxonomy.txt",
+		z_threshold = config["z_threshold_organelle"],
+		m_threshold = config["m_threshold_organelle"],
+		derep_db = config["rdir"] + "/organelle/derep_genomes/organelle_derep_db",
+		derep_slurm = config["wdir"] + "/config/cluster_derep.yaml",
+		derep_chunks = config["organelle_derep_chunks"]
+	threads: config["derep_threads"]
+	conda:
+		config["wdir"] + "/envs/derep.yaml"
+	log:
+		config["rdir"] + "/logs/derep_organelle.log"
+	shell:
+		"""
+		cat {input.tax_mito_nucl} {input.tax_plas_nucl} > {params.organelle_taxonomy}
+		mkdir -p {params.outdir}
+		cd {params.outdir}
+		derepG --threads {threads} --in-dir {params.indir} --taxa {params.organelle_taxonomy} --tmp ./ --db {params.derep_db} --prefix ../organelle --threshold {params.z_threshold} --mash-threshold {params.m_threshold} --debug --slurm-config {params.derep_slurm} --chunk-size {params.derep_chunks} --slurm-arr-size 10000 &>> {log}
+		# do not delete redundant genomes until DB workflow is finished, work with soft links for remaining steps
+		"""
+
+rule collect_refseq_organelles:
+	input:
+	    derep_meta = config["rdir"] + "/organelle/organelle-derep-genomes_results.tsv"
+		split_mito_prot = config["rdir"] + "/organelle/proteins/done_mito",
+		split_plas_prot = config["rdir"] + "/organelle/proteins/done_plas",
+		tax_mito_prot = config["rdir"] + "/organelle/mitochondria_taxonomy_prot.txt",
+		tax_plas_prot = config["rdir"] + "/organelle/plastid_taxonomy_prot.txt"
+		organelle_taxonomy = config["rdir"] + "/organelle/organelle_genome_taxonomy.txt"
+	output:
+		tax = config["rdir"] + "/tax_combined/organelle_derep_taxonomy.txt",
+		prot_tax = config["rdir"] + "/tax_combined/organelle_protein_taxonomy.txt"
 	params:
 		library_dir = config["rdir"] + "/organelle",
+		organelle_taxonomy = config["rdir"] + "/organelle/organelle_genome_taxonomy.txt",
+		gendir = config["rdir"] + "organelle/genomes/"
 		gdir = config["rdir"] + "/derep_combined/",
 		pdir = config["rdir"] + "/proteins_all/"
 	shell:
 		"""
 		mkdir -p {params.gdir}
 		mkdir -p {params.pdir}
-		cut -f1 {input.tax_mito_nucl} | while read line
+
+		# Collect organelle genomes
+		cut -f4 {input.derep_meta} | sed '1d' | while read line
 		do
-		  ln -sf {params.library_dir}/genomes/$line.fa.gz {params.gdir}
+		  ln -sf "$line" {params.gdir}
 		done
-		cut -f1 {input.tax_plas_nucl} | while read line
-		do
-		  ln -sf {params.library_dir}/genomes/$line.fa.gz {params.gdir}
-		done
+		awk -v FS="\\t" -v OFS="\\t" '{{print $2,$1}}' {input.derep_meta} | sed '1d' > {output.tax}
+		# assuming that the only reason that derepG jobs may have failed is because of too divergent assemblies,
+		# include all assemblies for these taxonomic paths
+		if [[ $(cut -f2 {input.organelle_taxonomy} | sort -t$'\\t' | uniq | wc -l) != $(cut -f1 {input.derep_meta} | sed '1d' | sort -t$'\\t' | uniq | wc -l) ]]
+		then
+		  cut -f2 {input.organelle_taxonomy} | sort -t$'\\t' | uniq | grep -v -F -f <(cut -f1 {input.derep_meta} | sed '1d' | sort -t$'\\t' | uniq) | grep -F -f - {input.organelle_taxonomy} > "{params.gendir}/../tmp"
+		  cut -f1 "{params.gendir}/../tmp" | sed 's/$/\.fa\.gz/' | while read line
+		  do
+		    ln -sf "{params.gendir}/$line" {params.gdir}
+		  done
+		  cat "{params.gendir}/../tmp" >> {output.tax}
+		  rm "{params.gendir}/../tmp"
+		fi
+
+		# Collect organelle proteins
 		cut -f1 {input.tax_mito_prot} | while read line
 		do
 		  ln -sf {params.library_dir}/proteins/$line.faa.gz {params.pdir}
@@ -280,6 +328,6 @@ rule collect_refseq_organelles:
 		do
 		  ln -sf {params.library_dir}/proteins/$line.faa.gz {params.pdir}
 		done
-		cat {input.tax_mito_nucl} {input.tax_mito_prot} {input.tax_plas_nucl} {input.tax_plas_prot} > {output.tax}
+
+		cat {input.tax_mito_prot} {input.tax_plas_prot} > {output.prot_tax}
 		"""
-		
