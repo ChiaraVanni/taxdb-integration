@@ -1,0 +1,118 @@
+# Basic dirs
+wdir: "/willerslev/users-shared-snm-willerslev-bgl956/taxdb-integration"
+rdir: "/willerslev/users-shared-snm-willerslev-bgl956/TaxDB_v3"
+
+# Default parameters
+threads: 1
+
+# number of threads for simple parallel processes
+parallel_threads: 128
+
+# select presets for building taxonomy DB
+# Possible flavours:
+flavour_main: "vanilla" # Main flavor based on GTDB: options are vanilla (original GTDB) or hires (derepG)
+# vanilla: includes the GTDB rs202 species cluster representatives (original GTDB, not derepG)
+flavour_sec: "organelle_euk_virus" # "prok" is the default to use only GTDB
+# vanilla_organelles_euk: includes vanilla + ncbi-organelles + coarse euk
+# vanilla_organelles_virus: includes vanilla + ncbi-organelles + coarse euk + CheckV v0.6 (representative genomes)
+
+# hires_organelle: includes GTDB rs202 - derepG + ncbi-organelles
+# hires_organelle_euk: includes GTDB rs202 - derepG + ncbi-organelles + mikroeuk + coarse-macro-euk
+# hires-organelle_euk_virus: includes GTDB rs202 - derepG + ncbi-organelles + mikroeuk + coarse-macro-euk + CheckV v0.6 (derepG)
+
+# location of file with input accessions and taxids for user input
+DB_custom: ""
+
+# DB name (to avoid overwriting output if more than 1 DB is built)
+db_name: "vanilla" # based on the flavours
+
+#######################################
+# additional settings for coarse preset
+# those are the same as for the onestep preset
+library_name:
+  - fungi
+  - invertebrate
+  - plant
+  - protozoa
+  - vertebrate_mammalian
+  - vertebrate_other
+
+rank_coarse:
+  fungi: "family"
+  invertebrate: "phylum" # "class"
+  plant: "phylum" # "class" # previously family
+  protozoa: "family"
+  vertebrate_mammalian: "phylum" # "class"
+  vertebrate_other: "phylum" # "class"
+
+coarse_sublineage:
+  fungi: ""
+  invertebrate: ""
+  plant: "" # previously p__Streptophyta
+  protozoa: ""
+  vertebrate_mammalian: ""
+  vertebrate_other: ""
+
+rank_sublineage:
+  fungi: "family"
+  invertebrate: "phylum"
+  plant: "phylum"
+  protozoa: "family"
+  vertebrate_mammalian: "phylum"
+  vertebrate_other: "phylum"
+
+# the rank selected here for custom genomes should be the highest of the previous selection
+rank_custom: "phylum" # "class"
+
+nmax_coarse: 3
+
+
+#########################################
+# additional settings for microeuk preset
+library_micro:
+  - fungi
+  - protozoa
+
+library_macro:
+  - invertebrate
+  - plant
+  #- vertebrate_mammalian
+  - vertebrate_other
+
+rank_macro:
+  invertebrate: "phylum"
+  plant: "phylum"
+  #vertebrate_mammalian: "phylum"
+  vertebrate_other: "phylum"
+
+macro_sublineage:
+  invertebrate: ""
+  plant: ""
+  vertebrate_other: ""
+
+macro_rank_sublineage:
+  invertebrate: "phylum"
+  plant: "phylum"
+  vertebrate_other: "phylum"
+
+# number of genomes to select per level of rank
+nmax_macro: 3
+
+
+# for quick collect of genomes used to build the DB, also import info about user supplied genomes
+# unlike in collect module, "n" is used here to indicate that no additional input should be considered
+# this will be streamlined in later revisions of the workflow
+custom_ncbi_pre_derep:
+  fungi: "n"
+  protozoa: "n"
+  plant: "n"
+  invertebrate: "n"
+  vertebrate_mammalian: "n"
+  vertebrate_other: "n"
+custom_ncbi_post_derep: "/willerslev/users-shared-snm-willerslev-bgl956/taxdb-integration/assets/euk_custom_nucl.txt"
+
+custom_gtdb_pre_derep: "n"
+custom_gtdb_post_derep: "/willerslev/users-shared-snm-willerslev-bgl956/taxdb-integration/assets/pro_custom_nucl.txt"
+
+custom_checkv_pre_derep: "n"
+custom_checkv_post_derep: "/willerslev/users-shared-snm-willerslev-bgl956/taxdb-integration/assets/vir_custom_nucl.txt"
