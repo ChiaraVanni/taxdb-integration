@@ -13,6 +13,9 @@ univec: "UniVec_Core"
 # univec: ""
 ncbi_server: "http://ftp.ncbi.nlm.nih.gov"
 
+# DB name (to avoid overwriting output if more than 1 DB is built)
+db_name: "vanilla" # based on the flavours (see config_DB.yaml)
+
 # enable conterminator (only suitable for coarse and onestep presets or similar custom DB selection)
 # kingdoms: "prokaryotes,fungi,protists,plants,metazoa"
 kingdoms: ""
