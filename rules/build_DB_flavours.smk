@@ -46,27 +46,26 @@ if config["main_flavour"] == "vanilla":
 				mkdir -p {params.outdir}
 				find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.custom_select}) | while read line
 				do
-				  ln -sf "$line" {params.outdir}
+					ln -sf "$line" {params.outdir}
 				done
 				cut -f1 {output.tax_select} | grep -F -f - {input.gen2taxid} > {output.acc_select}
 				"""
 # If the secondary flavour is set to "prok", check that all GTDB were collected
 	if config["flavour_sec"] == "prok":
 		rule check_vanilla_prok:
-		  	input:
-		  		select_gtdb = config["rdir"] + "/" + config["db_name"] + "/gtdb_select_accessions.txt",
-		  		custom_pro = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_accessions.txt" if config["custom_gtdb_post_derep"] != "n" else []
-		  	output:
-		  		select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
-		  		checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
-		  	params:
-		  		outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
-		  	shell:
-		  		"""
-		  		cat {input.select_gtdb} {input.custom_pro} > {output.select}
-		  		if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]
-		        	then
-		            	touch {output.checked}
+			input:
+				select_gtdb = config["rdir"] + "/" + config["db_name"] + "/gtdb_select_accessions.txt",
+				custom_pro = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_accessions.txt" if config["custom_gtdb_post_derep"] != "n" else []
+			output:
+				select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
+				checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
+			params:
+				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
+			shell:
+				"""
+				cat {input.select_gtdb} {input.custom_pro} > {output.select}
+		  		if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]; then
+		        	touch {output.checked}
 		        fi
 		  		"""
 
