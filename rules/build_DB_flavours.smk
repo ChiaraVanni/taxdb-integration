@@ -187,10 +187,9 @@ if config["main_flavour"] == "vanilla":
 				"""
 				cat {input.select_gtdb} {input.select_euk} \
 					{input.select_organelle} {input.custom_euk} {input.custom_pro} > {output.select}
-				if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]
-							  then
-								touch {output.checked}
-							  fi
+				if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]; then
+					touch {output.checked}
+				fi
 				"""
 
 # If the secondary flavour is set to "organelle_euk_virus" (last option), get the viral genomes (checkv representatives)
