@@ -15,15 +15,6 @@ Run: snakemake -s Snakefile
 
 configfile: "config/config_kraken2.yaml"
 
-LIBRARY_NAME = config["library_name"]
-LIBRARY_MACRO = config["library_macro"]
-LIBRARY_MICRO = config["library_micro"]
-
-wildcard_constraints:
-	library_name = '|'.join(LIBRARY_NAME),
-	library_macro = '|'.join(LIBRARY_MACRO),
-	library_micro = '|'.join(LIBRARY_MICRO)
-
 rule all:
 	input:
 		library = config["rdir"] + "/" + config["db_name"] + "/tmp/library.fna",
