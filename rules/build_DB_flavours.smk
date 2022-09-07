@@ -64,10 +64,10 @@ if config["main_flavour"] == "vanilla":
 			shell:
 				"""
 				cat {input.select_gtdb} {input.custom_pro} > {output.select}
-		  		if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]; then
-		        	touch {output.checked}
-		        fi
-		  		"""
+				if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]; then
+					touch {output.checked}
+				fi
+				"""
 
 # If the secondary flavour is not set to "prok", get the genomes for the organelles
 	if config["flavour_sec"] != "prok":
@@ -93,198 +93,198 @@ if config["main_flavour"] == "vanilla":
 				"""
 # Also add the eukaryotes in coarse-mode
 		rule select_euk_coarse:
-			 input:
-			 	tax = config["rdir"] + "/tax_combined/{library_name}_derep_taxonomy.txt",
-			 	meta = config["rdir"] + "/{library_name}/metadata/genome_metadata.txt",
-			 	gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt"
-			 output:
-			 	tax_select = config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_taxonomy.txt",
-			 	euk_select = config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_accessions.txt"
-			 params:
-			 	script = config["wdir"] + "/scripts/coarse_ncbi_selection.R",
-			 	rank = lambda wildcards: config["rank_coarse"][wildcards.library_name],
-			 	sublineage = lambda wildcards: config["coarse_sublineage"][wildcards.library_name],
-			 	rank_sublineage = lambda wildcards: config["rank_sublineage"][wildcards.library_name],
-			 	nmax = config["nmax_coarse"]
-			 conda:
-			 	config["wdir"] + "/envs/r.yaml"
-			 log:
-			 	config["rdir"] + "/logs/select_coarse_{library_name}.log"
-			 shell:
-			 	"""
-			 	{params.script} -t {input.tax} -m {input.meta} -r {params.rank} -s "{params.sublineage}" -R {params.rank_sublineage} -n {params.nmax} -o {output.tax_select} &>>{log}
-			 	cut -f1 {output.tax_select} | grep -F -f - {input.gen2taxid} > {output.euk_select}
-			 	"""
+			input:
+				tax = config["rdir"] + "/tax_combined/{library_name}_derep_taxonomy.txt",
+				meta = config["rdir"] + "/{library_name}/metadata/genome_metadata.txt",
+				gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt"
+			output:
+				tax_select = config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_taxonomy.txt",
+				euk_select = config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_accessions.txt"
+			params:
+				script = config["wdir"] + "/scripts/coarse_ncbi_selection.R",
+				rank = lambda wildcards: config["rank_coarse"][wildcards.library_name],
+				sublineage = lambda wildcards: config["coarse_sublineage"][wildcards.library_name],
+				rank_sublineage = lambda wildcards: config["rank_sublineage"][wildcards.library_name],
+				nmax = config["nmax_coarse"]
+			conda:
+				config["wdir"] + "/envs/r.yaml"
+			log:
+				config["rdir"] + "/logs/select_coarse_{library_name}.log"
+			shell:
+				"""
+				{params.script} -t {input.tax} -m {input.meta} -r {params.rank} -s "{params.sublineage}" -R {params.rank_sublineage} -n {params.nmax} -o {output.tax_select} &>>{log}
+				cut -f1 {output.tax_select} | grep -F -f - {input.gen2taxid} > {output.euk_select}
+				"""
 
 		rule collect_euk_coarse:
-			 input:
-			 	euk_select = config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_accessions.txt"
-			 output:
-			 	linked = config["rdir"] + "/" + config["db_name"] + "/genomes/{library_name}_done"
-			 params:
-			 	gendir = config["rdir"] + "/derep_combined",
-			 	outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
-			 shell:
-			 	"""
-			 	mkdir -p {params.outdir}
-			 	find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {input.euk_select}) | while read line
-			 	do
-			 		ln -sf "$line" {params.outdir}
-			 	done
-			 	touch {output.linked}
-			    """
+			input:
+				euk_select = config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_accessions.txt"
+			output:
+				linked = config["rdir"] + "/" + config["db_name"] + "/genomes/{library_name}_done"
+			params:
+				gendir = config["rdir"] + "/derep_combined",
+				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
+			shell:
+				"""
+				mkdir -p {params.outdir}
+				find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {input.euk_select}) | while read line
+				do
+					ln -sf "$line" {params.outdir}
+				done
+				touch {output.linked}
+				"""
 
 		if config["custom_ncbi_post_derep"] != "n":
 			rule add_custom_ncbi_coarse:
-			 	 input:
-			 		tax_select = expand(config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_taxonomy.txt", library_name = LIBRARY_NAME),
-			 		gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt",
-			 		tax_added = config["rdir"] + "/tax_combined/euk_custom_post_derep_taxonomy.txt"
-			 	output:
-			 		custom_select = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_taxonomy.txt",
-			 		euk_select = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_accessions.txt"
-			 	params:
-			 		script = config["wdir"] + "/scripts/coarse_selection_custom.R",
-			 		rank = config["rank_custom"],
-			 		nmax = config["nmax_coarse"],
-			 		dbdir = config["rdir"] + "/" + config["db_name"],
-			 		add = config["custom_ncbi_post_derep"],
-			 		gendir = config["rdir"] + "/derep_combined",
-			 		outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
-			 	conda:
-			 		config["wdir"] + "/envs/r.yaml"
-			 	log:
-			 		config["rdir"] + "/logs/select_coarse_custom_ncbi.log"
-			 	shell:
-			 		"""
-			 		cat {input.tax_select} > "{params.dbdir}/tmp_ncbi_select_taxonomy.txt"
-			 		{params.script} -t "{params.dbdir}/tmp_ncbi_select_taxonomy.txt" -c {params.add} -r {params.rank} -n {params.nmax} -o {output.custom_select} &>>{log}
-			 		mkdir -p {params.outdir}
-			 		find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.custom_select}) | while read line
-			 		do
-			 			ln -sf "$line" {params.outdir}
-			 		done
-			 		cut -f1 {output.custom_select} | grep -F -f - {input.gen2taxid} > {output.euk_select}
-			 		rm "{params.dbdir}/tmp_ncbi_select_taxonomy.txt"
-			 		"""
+				input:
+					tax_select = expand(config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_taxonomy.txt", library_name = LIBRARY_NAME),
+					gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt",
+					tax_added = config["rdir"] + "/tax_combined/euk_custom_post_derep_taxonomy.txt"
+				output:
+					custom_select = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_taxonomy.txt",
+					euk_select = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_accessions.txt"
+				params:
+					script = config["wdir"] + "/scripts/coarse_selection_custom.R",
+					rank = config["rank_custom"],
+					nmax = config["nmax_coarse"],
+					dbdir = config["rdir"] + "/" + config["db_name"],
+					add = config["custom_ncbi_post_derep"],
+					gendir = config["rdir"] + "/derep_combined",
+					outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
+				conda:
+					config["wdir"] + "/envs/r.yaml"
+				log:
+					config["rdir"] + "/logs/select_coarse_custom_ncbi.log"
+				shell:
+					"""
+					cat {input.tax_select} > "{params.dbdir}/tmp_ncbi_select_taxonomy.txt"
+					{params.script} -t "{params.dbdir}/tmp_ncbi_select_taxonomy.txt" -c {params.add} -r {params.rank} -n {params.nmax} -o {output.custom_select} &>>{log}
+					mkdir -p {params.outdir}
+					find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.custom_select}) | while read line
+					do
+						ln -sf "$line" {params.outdir}
+					done
+					cut -f1 {output.custom_select} | grep -F -f - {input.gen2taxid} > {output.euk_select}
+					rm "{params.dbdir}/tmp_ncbi_select_taxonomy.txt"
+					"""
 
 # If the secondary flavour is set to "organelle_euk", check the collection of GTDB, organelles and eukaryotes
 	if config["flavour_sec"] == "organelle_euk":
 		rule check_vanilla_organelle_euk:
-	  		input:
-	  			select_gtdb = config["rdir"] + "/" + config["db_name"] + "/gtdb_select_accessions.txt",
-	  			select_euk = expand(config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_accessions.txt", library_name = LIBRARY_NAME),
-	  			euk_linked = expand(config["rdir"] + "/" + config["db_name"] + "/genomes/{library_name}_done", library_name = LIBRARY_NAME),
-	  			select_organelle = config["rdir"] + "/" + config["db_name"] + "/organelle_select_accessions.txt",
-	  			custom_euk = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_accessions.txt" if config["custom_ncbi_post_derep"] != "n" else [],
-	  			custom_pro = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_accessions.txt" if config["custom_gtdb_post_derep"] != "n" else []
-	  		output:
-	  			select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
-	  			checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
-	  		params:
-	  			outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
-	  		shell:
-	  			"""
-	  			cat {input.select_gtdb} {input.select_euk} \
+			input:
+				select_gtdb = config["rdir"] + "/" + config["db_name"] + "/gtdb_select_accessions.txt",
+				select_euk = expand(config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_accessions.txt", library_name = LIBRARY_NAME),
+				euk_linked = expand(config["rdir"] + "/" + config["db_name"] + "/genomes/{library_name}_done", library_name = LIBRARY_NAME),
+				select_organelle = config["rdir"] + "/" + config["db_name"] + "/organelle_select_accessions.txt",
+				custom_euk = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_accessions.txt" if config["custom_ncbi_post_derep"] != "n" else [],
+				custom_pro = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_accessions.txt" if config["custom_gtdb_post_derep"] != "n" else []
+			output:
+				select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
+				checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
+			params:
+				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
+			shell:
+				"""
+				cat {input.select_gtdb} {input.select_euk} \
 					{input.select_organelle} {input.custom_euk} {input.custom_pro} > {output.select}
-	  			if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]
-	                          then
-	                            touch {output.checked}
-	                          fi
-	  			"""
+				if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]
+							  then
+								touch {output.checked}
+							  fi
+				"""
 
 # If the secondary flavour is set to "organelle_euk_virus" (last option), get the viral genomes (checkv representatives)
 	if config["flavour_sec"] == "organelle_euk_virus":
 		rule collect_checkv_coarse:
-	  		input:
-	  			reps_tax = config["rdir"] + "/checkv/checkv_reps_taxonomy.txt",
-	  			reps_fna = config["rdir"] + "/checkv/checkv_reps.fna",
-	  			gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt"
-	  		output:
-	  			vir_select = config["rdir"] + "/" + config["db_name"] + "/checkv_select_accessions.txt",
-	  			linked = config["rdir"] + "/" + config["db_name"] + "/genomes/checkv_done"
-	  		params:
-	  			gendir = config["rdir"] + "/checkv/reps_genomes",
-	  			outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
-	  		conda:
-	  			config["wdir"] + "/envs/parallel.yaml"
-	  		threads: config["parallel_threads"]
-	  		shell:
-	  			"""
-	  			mkdir -p {params.gendir}
-	  			if [[ $(find {params.gendir} -type f -name '*.gz' | wc -l) != $(grep -c '^>' {input.reps_fna}) ]]
-	  			then
-	  			  cd {params.gendir}
-	  			  cat {input.reps_fna} | awk '{{ if (substr($0, 1, 1)==">") {{filename=(substr($0,2) ".fa")}} print $0 > filename }}'
-	  			  find . -type f -name '*.fa' | parallel -j {threads} gzip {{}}
-	  			fi
-	  			cut -f1 {input.reps_tax} | grep -F -f - {input.gen2taxid} > {output.vir_select}
+			input:
+				reps_tax = config["rdir"] + "/checkv/checkv_reps_taxonomy.txt",
+				reps_fna = config["rdir"] + "/checkv/checkv_reps.fna",
+				gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt"
+			output:
+				vir_select = config["rdir"] + "/" + config["db_name"] + "/checkv_select_accessions.txt",
+				linked = config["rdir"] + "/" + config["db_name"] + "/genomes/checkv_done"
+			params:
+				gendir = config["rdir"] + "/checkv/reps_genomes",
+				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
+			conda:
+				config["wdir"] + "/envs/parallel.yaml"
+			threads: config["parallel_threads"]
+			shell:
+				"""
+				mkdir -p {params.gendir}
+				if [[ $(find {params.gendir} -type f -name '*.gz' | wc -l) != $(grep -c '^>' {input.reps_fna}) ]]
+				then
+				  cd {params.gendir}
+				  cat {input.reps_fna} | awk '{{ if (substr($0, 1, 1)==">") {{filename=(substr($0,2) ".fa")}} print $0 > filename }}'
+				  find . -type f -name '*.fa' | parallel -j {threads} gzip {{}}
+				fi
+				cut -f1 {input.reps_tax} | grep -F -f - {input.gen2taxid} > {output.vir_select}
 
-	  			mkdir -p {params.outdir}
-	  			find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.vir_select}) | while read line
-	  			do
-	  			  ln -sf "$line" {params.outdir}
-	  			done
-	  			touch {output.linked}
-	  			"""
+				mkdir -p {params.outdir}
+				find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.vir_select}) | while read line
+				do
+				  ln -sf "$line" {params.outdir}
+				done
+				touch {output.linked}
+				"""
 
-	  	if config["custom_checkv_post_derep"] != "n":
-	  		rule add_custom_checkv_coarse:
-	  			input:
-	  				reps_tax = config["rdir"] + "/checkv/checkv_reps_taxonomy.txt",
-	  				gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt",
-	  				tax_added = config["rdir"] + "/tax_combined/vir_custom_post_derep_taxonomy.txt"
-	  			output:
-	  				custom_select = config["rdir"] + "/" + config["db_name"] + "/custom_vir_select_taxonomy.txt",
-	  				vir_select = config["rdir"] + "/" + config["db_name"] + "/custom_vir_select_accessions.txt"
-	  			params:
-	  				script = config["wdir"] + "/scripts/coarse_selection_custom.R",
-	  				rank = "species",
-	  				nmax = 1,
-	  				add = config["custom_checkv_post_derep"],
-	  				gendir = config["rdir"] + "/derep_combined",
-	  				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
-	  			conda:
-	  				config["wdir"] + "/envs/r.yaml"
-	  			log:
-	  				config["rdir"] + "/logs/select_coarse_custom_gtdb.log"
-	  			shell:
-	  				"""
-	  				{params.script} -t {input.gtdb_reps} -c {params.add} -r {params.rank} -n {params.nmax} -o {output.custom_select} &>>{log}
-	  				mkdir -p {params.outdir}
-	  				find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.custom_select}) | while read line
-	  				do
-	  				  ln -sf "$line" {params.outdir}
-	  				done
-	  				cut -f1 {output.custom_select} | grep -F -f - {input.gen2taxid} > {output.vir_select}
-	  				"""
+		if config["custom_checkv_post_derep"] != "n":
+			rule add_custom_checkv_coarse:
+				input:
+					reps_tax = config["rdir"] + "/checkv/checkv_reps_taxonomy.txt",
+					gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt",
+					tax_added = config["rdir"] + "/tax_combined/vir_custom_post_derep_taxonomy.txt"
+				output:
+					custom_select = config["rdir"] + "/" + config["db_name"] + "/custom_vir_select_taxonomy.txt",
+					vir_select = config["rdir"] + "/" + config["db_name"] + "/custom_vir_select_accessions.txt"
+				params:
+					script = config["wdir"] + "/scripts/coarse_selection_custom.R",
+					rank = "species",
+					nmax = 1,
+					add = config["custom_checkv_post_derep"],
+					gendir = config["rdir"] + "/derep_combined",
+					outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
+				conda:
+					config["wdir"] + "/envs/r.yaml"
+				log:
+					config["rdir"] + "/logs/select_coarse_custom_gtdb.log"
+				shell:
+					"""
+					{params.script} -t {input.gtdb_reps} -c {params.add} -r {params.rank} -n {params.nmax} -o {output.custom_select} &>>{log}
+					mkdir -p {params.outdir}
+					find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.custom_select}) | while read line
+					do
+					  ln -sf "$line" {params.outdir}
+					done
+					cut -f1 {output.custom_select} | grep -F -f - {input.gen2taxid} > {output.vir_select}
+					"""
 
 # check the collection of GTDB, organelles, eukaryotes and viruses
 		rule check_vanilla_organelle_euk_virus:
-	  		input:
-	  			select_checkv = config["rdir"] + "/" + config["db_name"] + "/checkv_select_accessions.txt",
-	  			select_gtdb = config["rdir"] + "/" + config["db_name"] + "/gtdb_select_accessions.txt",
-	  			select_euk = expand(config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_accessions.txt", library_name = LIBRARY_NAME),
-	  			euk_linked = expand(config["rdir"] + "/" + config["db_name"] + "/genomes/{library_name}_done", library_name = LIBRARY_NAME),
-	  			select_organelle = config["rdir"] + "/" + config["db_name"] + "/organelle_select_accessions.txt",
-	  			custom_euk = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_accessions.txt" if config["custom_ncbi_post_derep"] != "n" else [],
-	  			custom_pro = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_accessions.txt" if config["custom_gtdb_post_derep"] != "n" else [],
-	  			custom_vir = config["rdir"] + "/" + config["db_name"] + "/custom_vir_select_accessions.txt" if config["custom_checkv_post_derep"] != "n" else []
-	  		output:
-	  			select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
-	  			checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
-	  		params:
-	  			outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
-	  		shell:
-	  			"""
-	  			cat {input.select_checkv} {input.select_gtdb} \
+			input:
+				select_checkv = config["rdir"] + "/" + config["db_name"] + "/checkv_select_accessions.txt",
+				select_gtdb = config["rdir"] + "/" + config["db_name"] + "/gtdb_select_accessions.txt",
+				select_euk = expand(config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_accessions.txt", library_name = LIBRARY_NAME),
+				euk_linked = expand(config["rdir"] + "/" + config["db_name"] + "/genomes/{library_name}_done", library_name = LIBRARY_NAME),
+				select_organelle = config["rdir"] + "/" + config["db_name"] + "/organelle_select_accessions.txt",
+				custom_euk = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_accessions.txt" if config["custom_ncbi_post_derep"] != "n" else [],
+				custom_pro = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_accessions.txt" if config["custom_gtdb_post_derep"] != "n" else [],
+				custom_vir = config["rdir"] + "/" + config["db_name"] + "/custom_vir_select_accessions.txt" if config["custom_checkv_post_derep"] != "n" else []
+			output:
+				select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
+				checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
+			params:
+				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
+			shell:
+				"""
+				cat {input.select_checkv} {input.select_gtdb} \
 					{input.select_euk} {input.select_organelle} \
 					{input.custom_euk} {input.custom_pro} {input.custom_vir} > {output.select}
-	  			if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]
-	                          then
-	                            touch {output.checked}
-	                          fi
-	  			"""
+				if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]
+							  then
+								touch {output.checked}
+							  fi
+				"""
 
 
 ## Build the high resolution DB
@@ -326,140 +326,140 @@ if config["flavour_main"] == "hires":
 # If the secondary flavour is set to "prok", check that all GTDB were collected
 	if config["flavour_sec"] == "prok":
 		rule check_hires_prok:
-		  	input:
-		  		pro_select = config["rdir"] + "/" + config["db_name"] + "/pro_select_accessions.txt",
-		  	output:
-		  		select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
-		  		checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
-		  	params:
-		  		outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
-		  	shell:
-		  		"""
-		  		cat {input.pro_select} > {output.select}
-		  		if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]; then
-		        	touch {output.checked}
-		        fi
-		  		"""
+			input:
+				pro_select = config["rdir"] + "/" + config["db_name"] + "/pro_select_accessions.txt",
+			output:
+				select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
+				checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
+			params:
+				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
+			shell:
+				"""
+				cat {input.pro_select} > {output.select}
+				if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]; then
+					touch {output.checked}
+				fi
+				"""
 
 # If the secondary flavour is not set to "prok", get the accessions/genomes for the organelles (results from derepG)
 	if config["flavour_sec"] != "prok":
 		rule collect_organelle:
-				input:
-					tax_organelle = config["rdir"] + "/organelle/organelle_derep_taxonomy.txt",
-					gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt"
-				output:
-					organelle_select = config["rdir"] + "/" + config["db_name"] + "/organelle_select_accessions.txt",
-					linked = config["rdir"] + "/" + config["db_name"] + "/genomes/organelle_done"
-				params:
-					gendir = config["rdir"] + "/derep_combined",
-					outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
-				shell:
-					"""
-					cat {input.tax_organelle} | cut -f1 | grep -F -f - {input.gen2taxid} > {output.organelle_select}
-					mkdir -p {params.outdir}
-					find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.organelle_select}) | while read line
-					do
-						ln -sf "$line" {params.outdir}
-					done
-					touch {output.linked}
-					"""
+			input:
+				tax_organelle = config["rdir"] + "/organelle/organelle_derep_taxonomy.txt",
+				gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt"
+			output:
+				organelle_select = config["rdir"] + "/" + config["db_name"] + "/organelle_select_accessions.txt",
+				linked = config["rdir"] + "/" + config["db_name"] + "/genomes/organelle_done"
+			params:
+				gendir = config["rdir"] + "/derep_combined",
+				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
+			shell:
+				"""
+				cat {input.tax_organelle} | cut -f1 | grep -F -f - {input.gen2taxid} > {output.organelle_select}
+				mkdir -p {params.outdir}
+				find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.organelle_select}) | while read line
+				do
+					ln -sf "$line" {params.outdir}
+				done
+				touch {output.linked}
+				"""
 # Also collect the micro-eukaryotes accessions/genomes (results from derepG)
 		rule collect_euk_micro:
-				input:
-					tax = config["rdir"] + "/tax_combined/{library_micro}_derep_taxonomy.txt",
-					gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt"
-				output:
-					mikro_select = config["rdir"] + "/" + config["db_name"] + "/{library_micro}_select_accessions.txt",
-					linked = config["rdir"] + "/" + config["db_name"] + "/genomes/{library_micro}_done"
-				params:
-					gendir = config["rdir"] + "/derep_combined",
-					outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
-				shell:
-					"""
-					cut -f1 {input.tax} | grep -F -f - {input.gen2taxid} > {output.mikro_select}
-					mkdir -p {params.outdir}
-					find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.mikro_select}) | while read line
-					do
-						ln -sf "$line" {params.outdir}
-					done
-					touch {output.linked}
-					"""
+			input:
+				tax = config["rdir"] + "/tax_combined/{library_micro}_derep_taxonomy.txt",
+				gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt"
+			output:
+				mikro_select = config["rdir"] + "/" + config["db_name"] + "/{library_micro}_select_accessions.txt",
+				linked = config["rdir"] + "/" + config["db_name"] + "/genomes/{library_micro}_done"
+			params:
+				gendir = config["rdir"] + "/derep_combined",
+				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
+			shell:
+				"""
+				cut -f1 {input.tax} | grep -F -f - {input.gen2taxid} > {output.mikro_select}
+				mkdir -p {params.outdir}
+				find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.mikro_select}) | while read line
+				do
+					ln -sf "$line" {params.outdir}
+				done
+				touch {output.linked}
+				"""
 # And collect the macro-eukaryotes accessions/genomes (coarse-mode)
 		rule select_euk_macro:
+			input:
+				tax = config["rdir"] + "/tax_combined/{library_macro}_derep_taxonomy.txt",
+				meta = config["rdir"] + "/{library_macro}/metadata/genome_metadata.txt",
+				gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt"
+			output:
+				tax_select = config["rdir"] + "/" + config["db_name"] + "/{library_macro}_select_taxonomy.txt",
+				macro_select = config["rdir"] + "/" + config["db_name"] + "/{library_macro}_select_accessions.txt"
+			params:
+				script = config["wdir"] + "/scripts/coarse_ncbi_selection.R",
+				rank = lambda wildcards: config["rank_macro"][wildcards.library_macro],
+				sublineage = lambda wildcards: config["macro_sublineage"][wildcards.library_macro],
+				rank_sublineage = lambda wildcards: config["macro_rank_sublineage"][wildcards.library_macro],
+				nmax = config["nmax_macro"]
+			conda:
+				config["wdir"] + "/envs/r.yaml"
+			log:
+				config["rdir"] + "/logs/select_microeuk_{library_macro}.log"
+			shell:
+				"""
+				{params.script} -t {input.tax} -m {input.meta} -r {params.rank} -s "{params.sublineage}" -R {params.rank_sublineage} -n {params.nmax} -o {output.tax_select} &>>{log}
+				cut -f1 {output.tax_select} | grep -F -f - {input.gen2taxid} > {output.macro_select}
+				"""
+
+		rule collect_euk_macro:
+			input:
+				macro_select = config["rdir"] + "/" + config["db_name"] + "/{library_macro}_select_accessions.txt"
+			output:
+				linked = config["rdir"] + "/" + config["db_name"] + "/genomes/{library_macro}_done"
+			params:
+				gendir = config["rdir"] + "/derep_combined",
+				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
+			shell:
+				"""
+				mkdir -p {params.outdir}
+				find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {input.macro_select}) | while read line
+				do
+					ln -sf "$line" {params.outdir}
+				done
+				touch {output.linked}
+				"""
+
+		if config["custom_ncbi_post_derep"] != "n":
+			rule add_custom_ncbi_euk:
 				input:
-					tax = config["rdir"] + "/tax_combined/{library_macro}_derep_taxonomy.txt",
-					meta = config["rdir"] + "/{library_macro}/metadata/genome_metadata.txt",
-					gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt"
+					tax_select = expand(config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_taxonomy.txt", library_name = LIBRARY_NAME),
+					gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt",
+					tax_added = config["rdir"] + "/tax_combined/euk_custom_post_derep_taxonomy.txt"
 				output:
-					tax_select = config["rdir"] + "/" + config["db_name"] + "/{library_macro}_select_taxonomy.txt",
-					macro_select = config["rdir"] + "/" + config["db_name"] + "/{library_macro}_select_accessions.txt"
+					custom_select = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_taxonomy.txt",
+					euk_select = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_accessions.txt"
 				params:
-					script = config["wdir"] + "/scripts/coarse_ncbi_selection.R",
-					rank = lambda wildcards: config["rank_macro"][wildcards.library_macro],
-					sublineage = lambda wildcards: config["macro_sublineage"][wildcards.library_macro],
-					rank_sublineage = lambda wildcards: config["macro_rank_sublineage"][wildcards.library_macro],
-					nmax = config["nmax_macro"]
+					script = config["wdir"] + "/scripts/coarse_selection_custom.R",
+					rank = config["rank_custom"],
+					nmax = config["nmax_coarse"],
+					dbdir = config["rdir"] + "/" + config["db_name"],
+					add = config["custom_ncbi_post_derep"],
+					gendir = config["rdir"] + "/derep_combined",
+					outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
 				conda:
 					config["wdir"] + "/envs/r.yaml"
 				log:
-					config["rdir"] + "/logs/select_microeuk_{library_macro}.log"
+					config["rdir"] + "/logs/select_onestep_custom_ncbi.log"
 				shell:
 					"""
-					{params.script} -t {input.tax} -m {input.meta} -r {params.rank} -s "{params.sublineage}" -R {params.rank_sublineage} -n {params.nmax} -o {output.tax_select} &>>{log}
-					cut -f1 {output.tax_select} | grep -F -f - {input.gen2taxid} > {output.macro_select}
-					"""
-
-		rule collect_euk_macro:
-				input:
-					macro_select = config["rdir"] + "/" + config["db_name"] + "/{library_macro}_select_accessions.txt"
-				output:
-					linked = config["rdir"] + "/" + config["db_name"] + "/genomes/{library_macro}_done"
-				params:
-					gendir = config["rdir"] + "/derep_combined",
-					outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
-				shell:
-					"""
+					cat {input.tax_select} > "{params.dbdir}/tmp_ncbi_select_taxonomy.txt"
+					{params.script} -t "{params.dbdir}/tmp_ncbi_select_taxonomy.txt" -c {params.add} -r {params.rank} -n {params.nmax} -o {output.custom_select} &>>{log}
 					mkdir -p {params.outdir}
-					find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {input.macro_select}) | while read line
+					find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.custom_select}) | while read line
 					do
 						ln -sf "$line" {params.outdir}
 					done
-					touch {output.linked}
+					cut -f1 {output.custom_select} | grep -F -f - {input.gen2taxid} > {output.euk_select}
+					rm "{params.dbdir}/tmp_ncbi_select_taxonomy.txt"
 					"""
-
-		if config["custom_ncbi_post_derep"] != "n":
-				rule add_custom_ncbi_euk:
-						input:
-							tax_select = expand(config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_taxonomy.txt", library_name = LIBRARY_NAME),
-							gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt",
-							tax_added = config["rdir"] + "/tax_combined/euk_custom_post_derep_taxonomy.txt"
-						output:
-							custom_select = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_taxonomy.txt",
-							euk_select = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_accessions.txt"
-						params:
-							script = config["wdir"] + "/scripts/coarse_selection_custom.R",
-							rank = config["rank_custom"],
-							nmax = config["nmax_coarse"],
-							dbdir = config["rdir"] + "/" + config["db_name"],
-							add = config["custom_ncbi_post_derep"],
-							gendir = config["rdir"] + "/derep_combined",
-							outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
-						conda:
-							config["wdir"] + "/envs/r.yaml"
-						log:
-							config["rdir"] + "/logs/select_onestep_custom_ncbi.log"
-						shell:
-							"""
-							cat {input.tax_select} > "{params.dbdir}/tmp_ncbi_select_taxonomy.txt"
-							{params.script} -t "{params.dbdir}/tmp_ncbi_select_taxonomy.txt" -c {params.add} -r {params.rank} -n {params.nmax} -o {output.custom_select} &>>{log}
-							mkdir -p {params.outdir}
-							find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.custom_select}) | while read line
-							do
-								ln -sf "$line" {params.outdir}
-							done
-							cut -f1 {output.custom_select} | grep -F -f - {input.gen2taxid} > {output.euk_select}
-							rm "{params.dbdir}/tmp_ncbi_select_taxonomy.txt"
-							"""
 
 # If the secondary flavour is set to "organelle_euk", check the collection of GTDB, organelles and eukaryotes
 	if config["flavour_sec"] == "organelle_euk":
@@ -593,7 +593,7 @@ rule collect_quick_download_info:
 	params:
 		gendir = config["rdir"] + "/" + config["db_name"] + "/genomes",
 		outdir = config["rdir"] + "/" + config["db_name"] + "/quick_collect",
-        add_ncbi_pre_derep = getTargetFiles(),
+		add_ncbi_pre_derep = getTargetFiles(),
 		add_ncbi_post_derep = config["custom_ncbi_post_derep"],
 		add_gtdb_pre_derep = config["custom_gtdb_pre_derep"],
 		add_gtdb_post_derep = config["custom_gtdb_post_derep"],
@@ -611,15 +611,15 @@ rule collect_quick_download_info:
 		do
 		  if [[ "$file" != "n" ]]
 		  then
-		    cut -f1,3 $file | grep -F -f <(cut -f1 {input.kraken2_select}) >> {output.custom_links}
+			cut -f1,3 $file | grep -F -f <(cut -f1 {input.kraken2_select}) >> {output.custom_links}
 		  fi
 		done
 		for file in {params.add_ncbi_post_derep} {params.add_gtdb_post_derep} {params.add_checkv_post_derep}
 		do
-		  if [[ "$file" != "n" ]]
-		  then
-		    cut -f2,4 $file | grep -F -f <(cut -f1 {input.kraken2_select}) >> {output.custom_links}
-		  fi
+			if [[ "$file" != "n" ]]
+		  	then
+				cut -f2,4 $file | grep -F -f <(cut -f1 {input.kraken2_select}) >> {output.custom_links}
+		  	fi
 		done
 		mkdir -p {params.outdir}/genomes
 		cat {output.custom_links} {output.download_links} | grep -o -F -f <(cut -f1 {input.select}) | grep -v -F -f - {input.select} | cut -f1 | parallel -j {threads} 'cp {params.gendir}/{{}}* {params.outdir}/genomes/'
