@@ -608,14 +608,14 @@ rule collect_quick_download_info:
 		do
 		  if [[ "$file" != "n" ]]
 		  then
-			cut -f1,3 $file | grep -F -f <(cut -f1 {input.kraken2_select}) >> {output.custom_links}
+			cut -f1,3 $file | grep -F -f <(cut -f1 {input.select}) >> {output.custom_links}
 		  fi
 		done
 		for file in {params.add_ncbi_post_derep} {params.add_gtdb_post_derep} {params.add_checkv_post_derep}
 		do
 			if [[ "$file" != "n" ]]
 		  	then
-				cut -f2,4 $file | grep -F -f <(cut -f1 {input.kraken2_select}) >> {output.custom_links}
+				cut -f2,4 $file | grep -F -f <(cut -f1 {input.select}) >> {output.custom_links}
 		  	fi
 		done
 		mkdir -p {params.outdir}/genomes
