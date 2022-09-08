@@ -9,7 +9,8 @@ package.list <- c(
   "crayon",
   "optparse",
   "tidyverse",
-  "scales"
+  "scales",
+  "stringr"
 )
 
 # Function to check if packages are installed
@@ -129,11 +130,16 @@ if(opt$rank != "species") {
   tax_included <- gsub("$", ";", tax_included)
 }
 
+included <- paste(tax_included, collapse = "|")
+
 # read custom genomes metadata table
 # extract taxa not yet represented
 # calculate genome size (approximated by zipped file size)
 custom_genomes <- read.table(opt$custom, h = T, sep = "\t", stringsAsFactors = F) %>%
-  filter(!grepl(paste(tax_included, collapse = "|"), taxon)) %>%
+  mutate(flag = case_when(stringr::str_detect(taxon, included) ~ 1, 
+    TRUE ~ 0 )) %>%
+  filter(flag != 1) %>%
+  select(-flag) %>%
   mutate(file_size = file.size(src)) %>%
   # remove strain names as they are not relevant for selection here
   mutate(taxon2 = gsub(";t__.*", "", taxon)) %>%
@@ -165,7 +171,7 @@ get_largest <- function(genome_data, rank_select, rank_subtax) {
 
 # scenario 1: rank is not species
 if(opt$rank != "species") {
-  
+
   rank_select <- opt$rank
   rank_subtax <- tax_ranks[which(tax_ranks == rank_select) + 1]
 
@@ -203,7 +209,7 @@ if(opt$rank != "species") {
   }
   genome_select <- custom_genomes[genome_select, c("accession", "taxon")]
   rm(tmp, tmp.sub)
-} 
+}
 
 # scenario 2: rank is species
 if(opt$rank == "species") {
@@ -215,7 +221,7 @@ if(opt$rank == "species") {
   msg(paste0("Maximum number of genomes per ", rank_select, ": ", max(div_subtax), ".\n"))
   n_select <- floor(rescale(div_subtax, to = c(1, ifelse(max(div_subtax) > n_max, n_max, max(div_subtax)))))
   msg(paste0("In total ", sum(n_select), " genomes selected.\n"))
-  
+
   # select based on file_size
   genome_select <- c()
   tmp <- custom_genomes
@@ -236,5 +242,3 @@ write.table(
   col.names = F,
   sep = "\t"
 )
-
-
