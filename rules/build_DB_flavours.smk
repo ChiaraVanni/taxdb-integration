@@ -73,7 +73,7 @@ if config["flavour_main"] == "vanilla":
 	if config["flavour_sec"] != "prok":
 		rule collect_organelle:
 			input:
-				tax_organelle = config["rdir"] + "/organelle/organelle_derep_taxonomy.txt",
+				tax_organelle = config["rdir"] + "/tax_combined/organelle_derep_taxonomy.txt",
 				gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt"
 			output:
 				organelle_select = config["rdir"] + "/" + config["db_name"] + "/organelle_select_accessions.txt",
@@ -342,7 +342,7 @@ if config["flavour_main"] == "hires":
 	if config["flavour_sec"] != "prok":
 		rule collect_organelle:
 			input:
-				tax_organelle = config["rdir"] + "/organelle/organelle_derep_taxonomy.txt",
+				tax_organelle = config["rdir"] + "/tax_combined/organelle_derep_taxonomy.txt",
 				gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt"
 			output:
 				organelle_select = config["rdir"] + "/" + config["db_name"] + "/organelle_select_accessions.txt",

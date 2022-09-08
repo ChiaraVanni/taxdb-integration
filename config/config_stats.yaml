@@ -1,6 +1,6 @@
 # Basic dirs
 wdir: "/willerslev/users-shared/science-snm-willerslev-bgl956/taxdb-integration"
-rdir: "/willerslev/users-shared/science-snm-willerslev-bgl956/TaxDB_v2"
+rdir: "/willerslev/users-shared/science-snm-willerslev-bgl956/TaxDB_v3"
 
 # Default parameters
 threads: 1
