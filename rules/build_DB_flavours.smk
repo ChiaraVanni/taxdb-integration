@@ -1,6 +1,6 @@
 ## Build vanilla DB
 # vanilla: GTDB (using the species representatives)
-if config["main_flavour"] == "vanilla":
+if config["flavour_main"] == "vanilla":
 	rule collect_vanilla_prok:
 		input:
 			gtdb_reps = config["rdir"] + "/gtdb/metadata/gtdb_reps_tax.txt",
