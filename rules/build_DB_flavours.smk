@@ -211,11 +211,10 @@ if config["main_flavour"] == "vanilla":
 			shell:
 				"""
 				mkdir -p {params.gendir}
-				if [[ $(find {params.gendir} -type f -name '*.gz' | wc -l) != $(grep -c '^>' {input.reps_fna}) ]]
-				then
-				  cd {params.gendir}
-				  cat {input.reps_fna} | awk '{{ if (substr($0, 1, 1)==">") {{filename=(substr($0,2) ".fa")}} print $0 > filename }}'
-				  find . -type f -name '*.fa' | parallel -j {threads} gzip {{}}
+				if [[ $(find {params.gendir} -type f -name '*.gz' | wc -l) != $(grep -c '^>' {input.reps_fna}) ]]; then
+					cd {params.gendir}
+					cat {input.reps_fna} | awk '{{ if (substr($0, 1, 1)==">") {{filename=(substr($0,2) ".fa")}} print $0 > filename }}'
+					find . -type f -name '*.fa' | parallel -j {threads} gzip {{}}
 				fi
 				cut -f1 {input.reps_tax} | grep -F -f - {input.gen2taxid} > {output.vir_select}
 
