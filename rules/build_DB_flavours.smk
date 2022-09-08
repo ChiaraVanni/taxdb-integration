@@ -222,7 +222,7 @@ if config["main_flavour"] == "vanilla":
 				mkdir -p {params.outdir}
 				find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.vir_select}) | while read line
 				do
-				  ln -sf "$line" {params.outdir}
+					ln -sf "$line" {params.outdir}
 				done
 				touch {output.linked}
 				"""
@@ -253,7 +253,7 @@ if config["main_flavour"] == "vanilla":
 					mkdir -p {params.outdir}
 					find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.custom_select}) | while read line
 					do
-					  ln -sf "$line" {params.outdir}
+						ln -sf "$line" {params.outdir}
 					done
 					cut -f1 {output.custom_select} | grep -F -f - {input.gen2taxid} > {output.vir_select}
 					"""
@@ -279,10 +279,9 @@ if config["main_flavour"] == "vanilla":
 				cat {input.select_checkv} {input.select_gtdb} \
 					{input.select_euk} {input.select_organelle} \
 					{input.custom_euk} {input.custom_pro} {input.custom_vir} > {output.select}
-				if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]
-							  then
-								touch {output.checked}
-							  fi
+				if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]; then
+			    	touch {output.checked}
+				fi
 				"""
 
 
@@ -314,11 +313,11 @@ if config["flavour_main"] == "hires":
 			mkdir -p {params.outdir}
 			find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {input.pro_select}) | while read line
 			do
-			  ln -sf "$line" {params.outdir}
+				ln -sf "$line" {params.outdir}
 			done
 			if [[ $(cat {input.pro_select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]
 			then
-			  touch {output.linked}
+				touch {output.linked}
 			fi
 			"""
 
