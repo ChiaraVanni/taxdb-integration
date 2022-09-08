@@ -248,7 +248,7 @@ if config["flavour_main"] == "vanilla":
 					config["rdir"] + "/logs/select_coarse_custom_gtdb.log"
 				shell:
 					"""
-					{params.script} -t {input.gtdb_reps} -c {params.add} -r {params.rank} -n {params.nmax} -o {output.custom_select} &>>{log}
+					{params.script} -t {input.reps_tax} -c {params.add} -r {params.rank} -n {params.nmax} -o {output.custom_select} &>>{log}
 					mkdir -p {params.outdir}
 					find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.custom_select}) | while read line
 					do
