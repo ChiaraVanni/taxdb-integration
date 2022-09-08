@@ -622,6 +622,6 @@ rule collect_quick_download_info:
 		cat {output.custom_links} {output.download_links} | grep -o -F -f <(cut -f1 {input.select}) | grep -v -F -f - {input.select} | cut -f1 | parallel -j {threads} 'cp {params.gendir}/{{}}* {params.outdir}/genomes/'
 		if [[ $(ls -1 {params.outdir}/genomes | cat - {output.download_links} {output.custom_links} | wc -l) == $(cat {input.select} | wc -l) ]]
 		then
-		  touch {output.done}
+		  touch {output.done_info}
 		fi
 		"""
