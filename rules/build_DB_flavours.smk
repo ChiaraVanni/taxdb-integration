@@ -44,7 +44,7 @@ if config["flavour_main"] == "vanilla":
 				"""
 				{params.script} -t {input.gtdb_reps} -c {params.add} -r {params.rank} -n {params.nmax} -o {output.tax_select} &>>{log}
 				mkdir -p {params.outdir}
-				find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.custom_select}) | while read line
+				find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.tax_select}) | while read line
 				do
 					ln -sf "$line" {params.outdir}
 				done
