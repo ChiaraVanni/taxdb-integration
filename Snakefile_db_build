@@ -27,8 +27,7 @@ wildcard_constraints:
 rule all:
 	input:
 		select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
-		checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done",
-		done_info = config["rdir"] + "/" + config["db_name"] + "/quick_collect/done"
+		checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
 
 '''
 ##### load rules #####
