@@ -245,7 +245,7 @@ if config["flavour_main"] == "vanilla":
 				conda:
 					config["wdir"] + "/envs/r.yaml"
 				log:
-					config["rdir"] + "/logs/select_coarse_custom_gtdb.log"
+					config["rdir"] + "/logs/select_coarse_custom_vir.log"
 				shell:
 					"""
 					{params.script} -t {input.reps_tax} -c {params.add} -r {params.rank} -n {params.nmax} -o {output.custom_select} &>>{log}
@@ -444,7 +444,7 @@ if config["flavour_main"] == "hires":
 				conda:
 					config["wdir"] + "/envs/r.yaml"
 				log:
-					config["rdir"] + "/logs/select_onestep_custom_ncbi.log"
+					config["rdir"] + "/logs/select_hires_custom_ncbi.log"
 				shell:
 					"""
 					cat {input.tax_select} > "{params.dbdir}/tmp_ncbi_select_taxonomy.txt"
