@@ -1,8 +1,8 @@
 # Basic dirs
-wdir: "/willerslev/users-shared-snm-willerslev-bgl956/taxdb-integration"
-rdir: "/willerslev/users-shared-snm-willerslev-bgl956/TaxDB/Test1"
-cdir: "/willerslev/users-shared-snm-willerslev-bgl956/TaxDB/Test1/coarse"
-sdir: "/willerslev/users-shared-snm-willerslev-bgl956/TaxDB/Test1/simulation"
+wdir: "/willerslev/users-shared/science-snm-willerslev-bgl956/taxdb-integration"
+rdir: "/willerslev/users-shared/science-snm-willerslev-bgl956/TaxDB/Test1"
+cdir: "/willerslev/users-shared/science-snm-willerslev-bgl956/TaxDB/Test1/coarse"
+sdir: "/willerslev/users-shared/science-snm-willerslev-bgl956/TaxDB/Test1/simulation"
 
 # define taxonomic partitions for highres db that were included
 library_highres:
@@ -29,7 +29,7 @@ ps_minimizer_length:
 ps_minimizer_spaces:
   - 4
 
-max_dbsize: 
+max_dbsize:
   - 220
   - 190
 
@@ -91,4 +91,3 @@ kraken_rtl_highres:
   - 0.4
   - 0.45
   - 0.5
-

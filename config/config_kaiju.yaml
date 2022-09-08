@@ -1,6 +1,6 @@
 # Basic dirs
-wdir: "/willerslev/users-shared-snm-willerslev-bgl956/taxdb-integration"
-rdir: "/willerslev/users-shared-snm-willerslev-bgl956/TaxDB_v3"
+wdir: "/willerslev/users-shared/science-snm-willerslev-bgl956/taxdb-integration"
+rdir: "/willerslev/users-shared/science-snm-willerslev-bgl956/TaxDB_v3"
 
 # Default parameters
 threads: 1
@@ -8,7 +8,7 @@ threads: 1
 # number of threads for simple parallel processes
 parallel_threads: 128
 
-# enable conterminator 
+# enable conterminator
 # kingdoms: "prokaryotes,fungi,protists,plants,metazoa"
 kingdoms: ""
 
@@ -17,4 +17,3 @@ cmem: "450G"
 
 # number of threads for building kaiju database index
 kaiju_threads: 128
-
