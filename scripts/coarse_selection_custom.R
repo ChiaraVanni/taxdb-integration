@@ -135,7 +135,7 @@ included <- paste(tax_included, collapse = "|")
 # read custom genomes metadata table
 # extract taxa not yet represented
 # calculate genome size (approximated by zipped file size)
-custom_genomes <- read.table(opt$custom, h = T, sep = "\t", stringsAsFactors = F, fill = TRUE) %>%
+custom_genomes <- read.table(opt$custom, h = T, sep = "\t", stringsAsFactors = F) %>%
   mutate(flag = case_when(stringr::str_detect(taxon, included) ~ 1,
     TRUE ~ 0 )) %>%
   filter(flag != 1) %>%
