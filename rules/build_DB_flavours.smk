@@ -192,7 +192,7 @@ if config["flavour_main"] == "vanilla":
 				custom_pro = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_accessions.txt" if config["custom_gtdb_post_derep"] != "n" else [],
 				gtdb_tax = config["rdir"] + "/gtdb/metadata/gtdb_reps_tax.txt",
 				organelle_tax = config["rdir"] + "/tax_combined/organelle_derep_taxonomy.txt",
-				coarse_euk_tax = config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_taxonomy.txt",
+				coarse_euk_tax = expand(config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_taxonomy.txt", library_name = LIBRARY_NAME),
 				custom_pro_tax = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_taxonomy.txt" if config["custom_gtdb_post_derep"] != "n" else [],
 				custom_euk_tax = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_taxonomy.txt" if config["custom_ncbi_post_derep"] != "n" else [],
 				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
@@ -296,7 +296,7 @@ if config["flavour_main"] == "vanilla":
 				gtdb_tax = config["rdir"] + "/gtdb/metadata/gtdb_reps_tax.txt",
 				organelle_tax = config["rdir"] + "/tax_combined/organelle_derep_taxonomy.txt",
 				checkv_tax = config["rdir"] + "/checkv/checkv_reps_taxonomy.txt",
-				coarse_euk_tax = config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_taxonomy.txt",
+				coarse_euk_tax = expand(config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_taxonomy.txt", library_name = LIBRARY_NAME),
 				custom_pro_tax = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_taxonomy.txt" if config["custom_gtdb_post_derep"] != "n" else [],
 				custom_euk_tax = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_taxonomy.txt" if config["custom_ncbi_post_derep"] != "n" else [],
 				custom_vir_tax = config["rdir"] + "/" + config["db_name"] + "/custom_vir_select_taxonomy.txt" if config["custom_checkv_post_derep"] != "n" else [],
