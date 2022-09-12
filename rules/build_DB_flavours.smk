@@ -296,7 +296,7 @@ if config["flavour_main"] == "vanilla":
 				coarse_euk_tax = config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_taxonomy.txt",
 				custom_pro_tax = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_taxonomy.txt" if config["custom_gtdb_post_derep"] != "n" else [],
 				custom_euk_tax = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_taxonomy.txt" if config["custom_ncbi_post_derep"] != "n" else [],
-				custom_vir_tax = config["rdir"] + "/" + config["db_name"] + "/custom_vir_select_taxonomy.txt" if config["custom_checkv_post_derep"] != "n" else []
+				custom_vir_tax = config["rdir"] + "/" + config["db_name"] + "/custom_vir_select_taxonomy.txt" if config["custom_checkv_post_derep"] != "n" else [],
 				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
 			shell:
 				"""
@@ -370,7 +370,7 @@ if config["flavour_main"] == "hires":
 				if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]; then
 					touch {output.checked}
 				fi
-				
+
 				rm {params.flav_dir}/*_select_accessions.txt {params.flav_dir}/*_select_taxonomy.txt
 				"""
 
