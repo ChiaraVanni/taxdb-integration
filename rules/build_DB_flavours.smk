@@ -179,7 +179,6 @@ if config["flavour_main"] == "vanilla":
 		rule check_vanilla_organelle_euk:
 			input:
 				select_gtdb = config["rdir"] + "/" + config["db_name"] + "/gtdb_select_accessions.txt",
-				select_euk = expand(config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_accessions.txt", library_name = LIBRARY_NAME),
 				euk_linked = expand(config["rdir"] + "/" + config["db_name"] + "/genomes/{library_name}_done", library_name = LIBRARY_NAME),
 				select_organelle = config["rdir"] + "/" + config["db_name"] + "/organelle_select_accessions.txt"
 			output:
@@ -188,6 +187,7 @@ if config["flavour_main"] == "vanilla":
 				select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
 				checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
 			params:
+				select_euk = expand(config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_accessions.txt", library_name = LIBRARY_NAME),
 				custom_euk = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_accessions.txt" if config["custom_ncbi_post_derep"] != "n" else [],
 				custom_pro = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_accessions.txt" if config["custom_gtdb_post_derep"] != "n" else [],
 				gtdb_tax = config["rdir"] + "/gtdb/metadata/gtdb_reps_tax.txt",
@@ -198,8 +198,8 @@ if config["flavour_main"] == "vanilla":
 				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
 			shell:
 				"""
-				cat {input.select_gtdb} {input.select_euk} \
-					{input.select_organelle} {params.custom_euk} {params.custom_pro} > {output.select}
+				cat {input.select_gtdb} {input.select_organelle} \
+					{params.select_euk} {params.custom_euk} {params.custom_pro} > {output.select}
 				cat {params.gtdb_tax} {params.organelle_tax} {params.coarse_euk_tax} \
 					{params.custom_pro_tax} {params.custom_euk_tax} > {output.tax}
 
@@ -279,14 +279,14 @@ if config["flavour_main"] == "vanilla":
 			input:
 				select_checkv = config["rdir"] + "/" + config["db_name"] + "/checkv_select_accessions.txt",
 				select_gtdb = config["rdir"] + "/" + config["db_name"] + "/gtdb_select_accessions.txt",
-				select_euk = expand(config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_accessions.txt", library_name = LIBRARY_NAME),
 				euk_linked = expand(config["rdir"] + "/" + config["db_name"] + "/genomes/{library_name}_done", library_name = LIBRARY_NAME),
-				select_organelle = config["rdir"] + "/" + config["db_name"] + "/organelle_select_accessions.txt"				
+				select_organelle = config["rdir"] + "/" + config["db_name"] + "/organelle_select_accessions.txt"
 			output:
 				tax = config["rdir"] + "/" + config["db_name"] + "/select_taxonomy.txt",
 				select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
 				checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
 			params:
+				select_euk = expand(config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_accessions.txt", library_name = LIBRARY_NAME),
 				custom_euk = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_accessions.txt" if config["custom_ncbi_post_derep"] != "n" else [],
 				custom_pro = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_accessions.txt" if config["custom_gtdb_post_derep"] != "n" else [],
 				custom_vir = config["rdir"] + "/" + config["db_name"] + "/custom_vir_select_accessions.txt" if config["custom_checkv_post_derep"] != "n" else [],
@@ -301,7 +301,7 @@ if config["flavour_main"] == "vanilla":
 			shell:
 				"""
 				cat {input.select_checkv} {input.select_gtdb} \
-					{input.select_euk} {input.select_organelle} \
+					{input.select_organelle} {params.select_euk} \
 					{params.custom_euk} {params.custom_pro} {params.custom_vir} > {output.select}
 				cat {params.gtdb_tax} {params.organelle_tax} {params.checkv_tax} \
 					{params.coarse_euk_tax} {params.custom_pro_tax} \
