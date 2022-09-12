@@ -201,7 +201,7 @@ rule build_kraken2_db:
 		map  = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/seqid2taxid.map",
 		taxo = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/taxo.k2d"
 	params:
-		dbdir = config["rdir"] + "/" + config["db_name"],
+		dbdir = config["rdir"] + "/" + config["db_name"] + "/db/kraken2",
 		kmer_len = config["kmer_len"],
 		min_len = config["minimizer_len"],
 		min_spaces = config["minimizer_spaces"],
@@ -210,7 +210,7 @@ rule build_kraken2_db:
 	conda:
 		config["wdir"] + "/envs/kraken2.yaml"
 	log:
-		config["rdir"] + "/logs/" + config["db_name"] + "_build_db.log"
+		config["rdir"] + "/logs/" + config["db_name"] + "_build_kraken2_db.log"
 	shell:
 		"""
 		echo "kmer: {params.kmer_len}" &>> {log}
