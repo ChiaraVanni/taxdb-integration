@@ -213,6 +213,8 @@ rule build_kraken2_db:
 		config["rdir"] + "/logs/" + config["db_name"] + "_build_kraken2_db.log"
 	shell:
 		"""
+		TAX=$(dirname {input.names})
+		cp -r ${{TAX}} {params.dbdir}/
 		echo "kmer: {params.kmer_len}" &>> {log}
 		echo "minimizer length: {params.min_len}" &>> {log}
 		echo "minimizer spaces: {params.min_spaces}" &>> {log}
