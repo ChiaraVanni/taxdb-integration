@@ -18,8 +18,8 @@ configfile: "config/config_kraken2.yaml"
 rule all:
 	input:
 		library = config["rdir"] + "/" + config["db_name"] + "/tmp/library.fna",
-		map = config["rdir"] + "/" + config["db_name"] + "/library/selection/prelim_map.txt",
-		hash = config["rdir"] + "/" + config["db_name"] + "/hash.k2d"
+		map = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/library/selection/prelim_map.txt",
+		hash = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/hash.k2d"
 
 '''
 ##### load rules #####

@@ -87,9 +87,9 @@ if config["kingdoms"]:
 		output:
 			contam_filt = config["rdir"] + "/" + config["db_name"] + "/decontamination/db_conterm_prediction_filt",
 			id_contam = config["rdir"] + "/" + config["db_name"] + "/decontamination/contam_id.accnos",
-			fasta_noncontam = config["rdir"] + "/" + config["db_name"] + "/kraken2" + "/library/selection/library.fna",
+			fasta_noncontam = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/library/selection/library.fna",
 			fasta_contam = config["rdir"] + "/" + config["db_name"] + "/decontamination/library_contam.fna",
-			map_noncontam = config["rdir"] + "/" + config["db_name"] + "/kraken2" + "/library/selection/prelim_map.txt"
+			map_noncontam = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/library/selection/prelim_map.txt"
 		conda:
 			config["wdir"] + "/envs/bbmap.yaml"
 		log:
@@ -107,8 +107,8 @@ if config["kingdoms"]:
 		input:
 			contam = config["rdir"] + "/" + config["db_name"] + "/decontamination/db_conterm_prediction_filt",
 			fasta_contam = config["rdir"] + "/" + config["db_name"] + "/decontamination/library_contam.fna",
-			map_noncontam = config["rdir"] + "/" + config["db_name"] + "/kraken2" + "/library/selection/prelim_map.txt",
-			fasta_noncontam = config["rdir"] + "/" + config["db_name"] + "/kraken2" + "/library/selection/library.fna"
+			map_noncontam = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/library/selection/prelim_map.txt",
+			fasta_noncontam = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/library/selection/library.fna"
 		output:
 			cleaned_fasta = config["rdir"] + "/" + config["db_name"] + "/decontamination/cleaned.fna",
 			cleaned_map = config["rdir"] + "/" + config["db_name"] + "/decontamination/cleaned_map.txt"
@@ -137,8 +137,8 @@ else:
 			fasta = config["rdir"] + "/" + config["db_name"] + "/tmp/library.fna",
 			map = config["rdir"] + "/" + config["db_name"] + "/tmp/prelim_map.txt"
 		output:
-			fasta = config["rdir"] + "/" + config["db_name"] + "/kraken2" + "/library/selection/library.fna",
-			map = config["rdir"] + "/" + config["db_name"] + "/kraken2" + "/library/selection/prelim_map.txt"
+			fasta = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/library/selection/library.fna",
+			map = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/library/selection/prelim_map.txt"
 		shell:
 			"""
 			mv {input.fasta} {output.fasta}
@@ -165,12 +165,12 @@ rule copy_taxonomy:
 if config["univec"]:
 	rule add_univec:
 		output:
-			fasta = config["rdir"] + "/" + config["db_name"] + "/kraken2" + "/library/" + config["univec"] + "/library.fna",
-			map = config["rdir"] + "/" + config["db_name"] + "/kraken2" + "/library/" + config["univec"] + "/prelim_map.txt"
+			fasta = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/library/" + config["univec"] + "/library.fna",
+			map = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/library/" + config["univec"] + "/prelim_map.txt"
 		params:
 			ncbi_server = config["ncbi_server"],
 			uv_name = config["univec"],
-			libdir = config["rdir"] + "/" + config["db_name"] + "/kraken2" + "/library/" + config["univec"]
+			libdir = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/library/" + config["univec"]
 		conda:
 			config["wdir"] + "/envs/kraken2.yaml"
 		log:
@@ -190,16 +190,16 @@ if config["univec"]:
 
 rule build_kraken2_db:
 	input:
-		univec_fasta = config["rdir"] + "/" + config["db_name"] + "/kraken2" + "/library/" + config["univec"] + "/library.fna" if config["univec"] else [],
-		univec_map = config["rdir"] + "/" + config["db_name"] + "/kraken2" + "/library/" + config["univec"] + "/prelim_map.txt" if config["univec"] else [],
-		lib_fasta = config["rdir"] + "/" + config["db_name"] + "/kraken2" + "/library/selection/library.fna",
-		lib_map = config["rdir"] + "/" + config["db_name"] + "/kraken2" + "/library/selection/prelim_map.txt",
+		univec_fasta = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/library/" + config["univec"] + "/library.fna" if config["univec"] else [],
+		univec_map = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/library/" + config["univec"] + "/prelim_map.txt" if config["univec"] else [],
+		lib_fasta = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/library/selection/library.fna",
+		lib_map = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/library/selection/prelim_map.txt",
 		names = config["rdir"] + "/" + config["db_name"] + "/taxonomy/names.dmp"
 	output:
-		hash = config["rdir"] + "/" + config["db_name"] + "/kraken2" + "/hash.k2d",
-		opts = config["rdir"] + "/" + config["db_name"] + "/kraken2" + "/opts.k2d",
-		map  = config["rdir"] + "/" + config["db_name"] + "/kraken2" + "/seqid2taxid.map",
-		taxo = config["rdir"] + "/" + config["db_name"] + "/kraken2" + "/taxo.k2d"
+		hash = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/hash.k2d",
+		opts = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/opts.k2d",
+		map  = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/seqid2taxid.map",
+		taxo = config["rdir"] + "/" + config["db_name"] + "/db/kraken2" + "/taxo.k2d"
 	params:
 		dbdir = config["rdir"] + "/" + config["db_name"],
 		kmer_len = config["kmer_len"],
