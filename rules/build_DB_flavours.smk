@@ -181,15 +181,15 @@ if config["flavour_main"] == "vanilla":
 				select_gtdb = config["rdir"] + "/" + config["db_name"] + "/gtdb_select_accessions.txt",
 				select_euk = expand(config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_accessions.txt", library_name = LIBRARY_NAME),
 				euk_linked = expand(config["rdir"] + "/" + config["db_name"] + "/genomes/{library_name}_done", library_name = LIBRARY_NAME),
-				select_organelle = config["rdir"] + "/" + config["db_name"] + "/organelle_select_accessions.txt"
+				select_organelle = config["rdir"] + "/" + config["db_name"] + "/organelle_select_accessions.txt",
+								custom_euk = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_accessions.txt" if config["custom_ncbi_post_derep"] != "n" else [],
+								custom_pro = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_accessions.txt" if config["custom_gtdb_post_derep"] != "n" else []
 			output:
 				tax = config["rdir"] + "/" + config["db_name"] + "/select_taxonomy.txt",
 				select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
 				checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
 			params:
 				flav_dir = config["rdir"] + "/" + config["db_name"],
-				custom_euk = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_accessions.txt" if config["custom_ncbi_post_derep"] != "n" else [],
-				custom_pro = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_accessions.txt" if config["custom_gtdb_post_derep"] != "n" else [],
 				gtdb_tax = config["rdir"] + "/gtdb/metadata/gtdb_reps_tax.txt",
 				organelle_tax = config["rdir"] + "/tax_combined/organelle_derep_taxonomy.txt",
 				coarse_euk_tax = expand(config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_taxonomy.txt", library_name = LIBRARY_NAME),
@@ -199,7 +199,7 @@ if config["flavour_main"] == "vanilla":
 			shell:
 				"""
 				cat {input.select_gtdb} {input.select_euk} \
-					{input.select_organelle} {params.custom_euk} {params.custom_pro} > {output.select}
+					{input.select_organelle} {input.custom_euk} {input.custom_pro} > {output.select}
 				cat {params.gtdb_tax} {params.organelle_tax} {params.coarse_euk_tax} \
 					{params.custom_pro_tax} {params.custom_euk_tax} > {output.tax}
 
