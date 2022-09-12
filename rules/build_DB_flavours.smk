@@ -57,16 +57,22 @@ if config["flavour_main"] == "vanilla":
 				select_gtdb = config["rdir"] + "/" + config["db_name"] + "/gtdb_select_accessions.txt",
 				custom_pro = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_accessions.txt" if config["custom_gtdb_post_derep"] != "n" else []
 			output:
+				tax = config["rdir"] + "/" + config["db_name"] + "/select_taxonomy.txt",
 				select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
 				checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
 			params:
+				gtdb_tax = config["rdir"] + "/gtdb/metadata/gtdb_reps_tax.txt",
+				custom_pro_tax = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_taxonomy.txt" if config["custom_gtdb_post_derep"] != "n" else [],
 				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
 			shell:
 				"""
 				cat {input.select_gtdb} {input.custom_pro} > {output.select}
+				cat {params.gtdb_tax} {params.custom_pro_tax} > {output.tax}
+
 				if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]; then
 					touch {output.checked}
 				fi
+				rm {input.select_gtdb} {input.custom_pro} {params.custom_pro_tax}
 				"""
 
 # If the secondary flavour is not set to "prok", get the genomes for the organelles
@@ -179,17 +185,28 @@ if config["flavour_main"] == "vanilla":
 				custom_euk = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_accessions.txt" if config["custom_ncbi_post_derep"] != "n" else [],
 				custom_pro = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_accessions.txt" if config["custom_gtdb_post_derep"] != "n" else []
 			output:
+				flav_dir = config["rdir"] + "/" + config["db_name"],
+				tax = config["rdir"] + "/" + config["db_name"] + "/select_taxonomy.txt",
 				select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
 				checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
 			params:
+				gtdb_tax = config["rdir"] + "/gtdb/metadata/gtdb_reps_tax.txt",
+				organelle_tax = config["rdir"] + "/tax_combined/organelle_derep_taxonomy.txt",
+				coarse_euk_tax = config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_taxonomy.txt",
+				custom_pro_tax = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_taxonomy.txt" if config["custom_gtdb_post_derep"] != "n" else [],
+				custom_euk_tax = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_taxonomy.txt" if config["custom_ncbi_post_derep"] != "n" else [],
 				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
 			shell:
 				"""
 				cat {input.select_gtdb} {input.select_euk} \
 					{input.select_organelle} {input.custom_euk} {input.custom_pro} > {output.select}
+				cat {params.gtdb_tax} {params.organelle_tax} {params.coarse_euk_tax} \
+					{params.custom_pro_tax} {params.custom_euk_tax} > {output.tax}
+
 				if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]; then
 					touch {output.checked}
 				fi
+				rm {params.flav_dir}/*_select_accessions.txt {params.flav_dir}/*_select_taxonomy.txt
 				"""
 
 # If the secondary flavour is set to "organelle_euk_virus" (last option), get the viral genomes (checkv representatives)
@@ -269,21 +286,33 @@ if config["flavour_main"] == "vanilla":
 				custom_pro = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_accessions.txt" if config["custom_gtdb_post_derep"] != "n" else [],
 				custom_vir = config["rdir"] + "/" + config["db_name"] + "/custom_vir_select_accessions.txt" if config["custom_checkv_post_derep"] != "n" else []
 			output:
+				tax = config["rdir"] + "/" + config["db_name"] + "/select_taxonomy.txt",
 				select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
 				checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
 			params:
+				gtdb_tax = config["rdir"] + "/gtdb/metadata/gtdb_reps_tax.txt",
+				organelle_tax = config["rdir"] + "/tax_combined/organelle_derep_taxonomy.txt",
+				checkv_tax = config["rdir"] + "/checkv/checkv_reps_taxonomy.txt",
+				coarse_euk_tax = config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_taxonomy.txt",
+				custom_pro_tax = config["rdir"] + "/" + config["db_name"] + "/custom_pro_select_taxonomy.txt" if config["custom_gtdb_post_derep"] != "n" else [],
+				custom_euk_tax = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_taxonomy.txt" if config["custom_ncbi_post_derep"] != "n" else [],
+				custom_vir_tax = config["rdir"] + "/" + config["db_name"] + "/custom_vir_select_taxonomy.txt" if config["custom_checkv_post_derep"] != "n" else []
 				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
 			shell:
 				"""
 				cat {input.select_checkv} {input.select_gtdb} \
 					{input.select_euk} {input.select_organelle} \
 					{input.custom_euk} {input.custom_pro} {input.custom_vir} > {output.select}
+				cat {params.gtdb_tax} {params.organelle_tax} {params.checkv_tax} \
+					{params.coarse_euk_tax} {params.custom_pro_tax} \
+					{params.custom_euk_tax} {params.custom_vir_tax} > {output.tax}
+
 				if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]; then
 			    	touch {output.checked}
 				fi
 				"""
 
-
+##################################################################################################################################################
 ## Build the high resolution DB
 # Basic hires is GTDB using the results/genomes from derepG
 if config["flavour_main"] == "hires":
@@ -326,16 +355,23 @@ if config["flavour_main"] == "hires":
 			input:
 				pro_select = config["rdir"] + "/" + config["db_name"] + "/pro_select_accessions.txt",
 			output:
+				tax = config["rdir"] + "/" + config["db_name"] + "/select_taxonomy.txt",
 				select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
 				checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
 			params:
+				flav_dir = config["rdir"] + "/" + config["db_name"],
+				gtdb_tax = config["rdir"] + "/tax_combined/gtdb_derep_taxonomy.txt",
+				custom_pro_tax = config["rdir"] + "/tax_combined/pro_custom_post_derep_taxonomy.txt" if config["custom_gtdb_post_derep"] != "n" else [],
 				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
 			shell:
 				"""
 				cat {input.pro_select} > {output.select}
+				cat {params.gtdb_tax} {params.custom_pro_tax} > {output.tax}
 				if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]; then
 					touch {output.checked}
 				fi
+				
+				rm {params.flav_dir}/*_select_accessions.txt {params.flav_dir}/*_select_taxonomy.txt
 				"""
 
 # If the secondary flavour is not set to "prok", get the accessions/genomes for the organelles (results from derepG)
@@ -471,18 +507,33 @@ if config["flavour_main"] == "hires":
 				micro_linked = expand(config["rdir"] + "/" + config["db_name"] + "/genomes/{library_micro}_done", library_micro = LIBRARY_MICRO),
 				custom_euk = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_accessions.txt" if config["custom_ncbi_post_derep"] != "n" else []
 			output:
+				tax = config["rdir"] + "/" + config["db_name"] + "/select_taxonomy.txt",
 				select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
 				checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
 			params:
+				flav_dir = config["rdir"] + "/" + config["db_name"],
+				gtdb_tax = config["rdir"] + "/tax_combined/gtdb_derep_taxonomy.txt",
+				organelle_tax = config["rdir"] + "/tax_combined/organelle_derep_taxonomy.txt",
+				microeuk_tax = config["rdir"] + "/tax_combined/{library_micro}_derep_taxonomy.txt",
+				macro_euk_tax = config["rdir"] + "/" + config["db_name"] + "/{library_macro}_select_taxonomy.txt",
+				custom_pro_tax = config["rdir"] + "/tax_combined/pro_custom_post_derep_taxonomy.txt" if config["custom_gtdb_post_derep"] != "n" else [],
+				custom_euk_tax = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_taxonomy.txt" if config["custom_ncbi_post_derep"] != "n" else [],
 				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
 			shell:
 				"""
 				cat {input.select_gtdb} {input.custom_pro} \
 					{input.select_macro} {input.select_micro} \
 					{input.select_organelle} {input.custom_euk} > {output.select}
+
+				cat {params.gtdb_tax} {params.organelle_tax} \
+					{params.microeuk_tax} {params.macroeuk_tax} \
+					{params.custom_pro_tax} {params.custom_euk_tax}  > {output.tax}
+
 				if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]; then
 					touch {output.checked}
 				fi
+
+				rm {params.flav_dir}/*_select_accessions.txt {params.flav_dir}/*_select_taxonomy.txt
 				"""
 
 # If the secondary flavour is set to "organelle_euk_virus", collect the viral accessions/genomes (results from derepG)
@@ -530,9 +581,19 @@ if config["flavour_main"] == "hires":
 				custom_euk = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_accessions.txt" if config["custom_ncbi_post_derep"] != "n" else [],
 				select_vir = config["rdir"] + "/" + config["db_name"] + "/vir_select_accessions.txt"
 			output:
+				tax = config["rdir"] + "/" + config["db_name"] + "/select_taxonomy.txt",
 				select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
 				checked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
 			params:
+				flav_dir = config["rdir"] + "/" + config["db_name"],
+				gtdb_tax = config["rdir"] + "/tax_combined/gtdb_derep_taxonomy.txt",
+				organelle_tax = config["rdir"] + "/tax_combined/organelle_derep_taxonomy.txt",
+				microeuk_tax = config["rdir"] + "/tax_combined/{library_micro}_derep_taxonomy.txt",
+				macro_euk_tax = config["rdir"] + "/" + config["db_name"] + "/{library_macro}_select_taxonomy.txt",
+				checkv_tax = config["rdir"] + "/tax_combined/checkv_derep_taxonomy.txt",
+				custom_pro_tax = config["rdir"] + "/tax_combined/pro_custom_post_derep_taxonomy.txt" if config["custom_gtdb_post_derep"] != "n" else [],
+				custom_euk_tax = config["rdir"] + "/" + config["db_name"] + "/custom_euk_select_taxonomy.txt" if config["custom_ncbi_post_derep"] != "n" else [],
+				custom_vir_tax = config["rdir"] + "/tax_combined/vir_custom_post_derep_taxonomy.txt" if config["custom_checkv_post_derep"] != "n" else [],
 				outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
 			shell:
 				"""
@@ -540,9 +601,16 @@ if config["flavour_main"] == "hires":
 					{input.select_macro} {input.select_micro} \
 					{input.select_organelle} {input.custom_euk} \
 					{input.select_vir} > {output.select}
+
+				cat {params.gtdb_tax} {params.organelle_tax} {params.checkv_tax} \
+					{params.microeuk_tax} {params.macroeuk_tax} \
+					{params.custom_pro_tax} {params.custom_euk_tax} {params.custom_vir_tax} > {output.tax}
+
 				if [[ $(cat {output.select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]; then
 					touch {output.checked}
 				fi
+
+				rm {params.flav_dir}/*_select_accessions.txt {params.flav_dir}/*_select_taxonomy.txt
 				"""
 
 if config["flavour_main"] == "user":
