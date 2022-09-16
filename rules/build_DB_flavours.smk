@@ -326,28 +326,20 @@ if config["flavour_main"] == "hires":
 			added_nuc_gtdb = config["rdir"] + "/tax_combined/pro_custom_post_derep_taxonomy.txt" if config["custom_gtdb_post_derep"] != "n" else [],
 			gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt"
 		output:
-			pro_select = config["rdir"] + "/" + config["db_name"] + "/pro_select_accessions.txt"
-		shell:
-			"""
-			cat {input.gtdb} {input.added_nuc_gtdb} | cut -f1 | grep -F -f - {input.gen2taxid} > {output.pro_select}
-			"""
-
-	rule collect_genomes_highres_prok:
-		input:
-			pro_select = config["rdir"] + "/" + config["db_name"] + "/pro_select_accessions.txt"
-		output:
+			pro_select = config["rdir"] + "/" + config["db_name"] + "/pro_select_accessions.txt",
 			linked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
 		params:
 			gendir = config["rdir"] + "/derep_combined",
 			outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
 		shell:
 			"""
+			cat {input.gtdb} {input.added_nuc_gtdb} | cut -f1 | grep -F -f - {input.gen2taxid} > {output.pro_select}
 			mkdir -p {params.outdir}
-			find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {input.pro_select}) | while read line
+			find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.pro_select}) | while read line
 			do
 				ln -sf "$line" {params.outdir}
 			done
-			if [[ $(cat {input.pro_select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]
+			if [[ $(cat {output.pro_select} | wc -l) == $(find {params.outdir} -name '*.gz' | wc -l) ]]
 			then
 				touch {output.linked}
 			fi
