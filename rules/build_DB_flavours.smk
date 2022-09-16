@@ -349,7 +349,7 @@ if config["flavour_main"] == "hires":
 	if config["flavour_sec"] == "prok":
 		rule check_hires_prok:
 			input:
-				pro_select = config["rdir"] + "/" + config["db_name"] + "/pro_select_accessions.txt",
+				pro_select = config["rdir"] + "/" + config["db_name"] + "/pro_select_accessions.txt"
 			output:
 				tax = config["rdir"] + "/" + config["db_name"] + "/select_taxonomy.txt",
 				select = config["rdir"] + "/" + config["db_name"] + "/select_accessions.txt",
