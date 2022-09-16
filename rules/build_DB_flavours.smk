@@ -320,14 +320,14 @@ if config["flavour_main"] == "vanilla":
 ## Build the high resolution DB
 # Basic hires is GTDB using the results/genomes from derepG
 if config["flavour_main"] == "hires":
-	rule select_genomes_highres_prok:
+	rule collect_genomes_highres_prok:
 		input:
 			gtdb = config["rdir"] + "/tax_combined/gtdb_derep_taxonomy.txt",
 			added_nuc_gtdb = config["rdir"] + "/tax_combined/pro_custom_post_derep_taxonomy.txt" if config["custom_gtdb_post_derep"] != "n" else [],
 			gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt"
 		output:
 			pro_select = config["rdir"] + "/" + config["db_name"] + "/pro_select_accessions.txt",
-			linked = config["rdir"] + "/" + config["db_name"] + "/genomes/done"
+			linked = config["rdir"] + "/" + config["db_name"] + "/genomes/done_linking"
 		params:
 			gendir = config["rdir"] + "/derep_combined",
 			outdir = config["rdir"] + "/" + config["db_name"] + "/genomes/"
