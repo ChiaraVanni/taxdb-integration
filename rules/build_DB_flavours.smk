@@ -467,7 +467,8 @@ if config["flavour_main"] == "hires":
 		if config["custom_ncbi_post_derep"] != "n":
 			rule add_custom_ncbi_euk:
 				input:
-					tax_select = expand(config["rdir"] + "/" + config["db_name"] + "/{library_name}_select_taxonomy.txt", library_name = LIBRARY_NAME),
+					tax_select1 = expand(config["rdir"] + "/" + config["db_name"] + "/{library_micro}_select_taxonomy.txt", library_micro = LIBRARY_MICRO),
+					tax_select2 = expand(config["rdir"] + "/" + config["db_name"] + "/{library_macro}_select_taxonomy.txt", library_macro = LIBRARY_MACRO),
 					gen2taxid = config["rdir"] + "/tax_combined/full_genome2taxid.txt",
 					tax_added = config["rdir"] + "/tax_combined/euk_custom_post_derep_taxonomy.txt"
 				output:
@@ -487,7 +488,7 @@ if config["flavour_main"] == "hires":
 					config["rdir"] + "/logs/select_hires_custom_ncbi.log"
 				shell:
 					"""
-					cat {input.tax_select} > "{params.dbdir}/tmp_ncbi_select_taxonomy.txt"
+					cat {input.tax_select1} {input.tax_select2} > "{params.dbdir}/tmp_ncbi_select_taxonomy.txt"
 					{params.script} -t "{params.dbdir}/tmp_ncbi_select_taxonomy.txt" -c {params.add} -r {params.rank} -n {params.nmax} -o {output.custom_select} &>>{log}
 					mkdir -p {params.outdir}
 					find {params.gendir} -name '*.gz' | grep -F -f <(cut -f1 {output.custom_select}) | while read line
