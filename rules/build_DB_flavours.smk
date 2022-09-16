@@ -592,7 +592,7 @@ if config["flavour_main"] == "hires":
 				flav_dir = config["rdir"] + "/" + config["db_name"],
 				gtdb_tax = config["rdir"] + "/tax_combined/gtdb_derep_taxonomy.txt",
 				organelle_tax = config["rdir"] + "/tax_combined/organelle_derep_taxonomy.txt",
-				microeuk_tax = expand(config["rdir"] + "/" + config["db_name"] + "/tax_combined/{library_micro}_derep_taxonomy.txt" , library_macro = LIBRARY_MICRO),
+				microeuk_tax = expand(config["rdir"] + "/" + config["db_name"] + "/tax_combined/{library_micro}_derep_taxonomy.txt" , library_micro = LIBRARY_MICRO),
 				macro_euk_tax = expand(config["rdir"] + "/" + config["db_name"] + "/{library_macro}_select_taxonomy.txt" , library_macro = LIBRARY_MACRO),
 				checkv_tax = config["rdir"] + "/tax_combined/checkv_derep_taxonomy.txt",
 				custom_pro_tax = config["rdir"] + "/tax_combined/pro_custom_post_derep_taxonomy.txt" if config["custom_gtdb_post_derep"] != "n" else [],
